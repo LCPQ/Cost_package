@@ -26,7 +26,7 @@ Related Papers
 
 CASDI and (SC)2 size-consistency correction
 
-| `Size-consistent self-consistent configuration interaction from a complete active space`
+| `Size-consistent self-consistent configuration interaction from a complete active space`_
 | N. Ben Amor, D. Maynau Chem. Phys.Lett. Volume 286, Issues 3–4, 10 April 1998, Pages 211–220
 
 <http://dx.doi.org/doi:10.1016/S0009-2614(98)00104-3>
