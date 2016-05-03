@@ -41,7 +41,4 @@ Related Papers
 - **DOLO (DO Local Orbitals)**
   [Direct generation of local orbitals for multireference treatment and subsequent uses for the calculation of the correlation energy](http://dx.doi.org/10.1063/1.1476312), Daniel Maynau, Stefano Evangelisti, Nathalie Guihéry, Carmen J. Calzado and Jean-Paul Malrieu, J. Chem. Phys. 116, 10060 (2002)
 
-Manuals
-=======
-
 
