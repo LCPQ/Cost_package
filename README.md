@@ -3,12 +3,12 @@
 
 Web page : http://github.com/LCPQ/Cost_package
 
-In the whole package "cost", there is 
-- casdi (MRCI program), 
-- dolo wich allows the localization of orbitals,
-- exsci also named casdiloc which is a selected MRCI (quasi linear MRCI),
-- noscf program to optimize orbitals (density matrices of states with different spin multiplicity or spatial symmetry),
-- faiano, to transform a basis set in an ANO form (sometimes useful for the localization)
+In the whole package "cost", you can find : 
+- casdi: MRCI program (MR-SDCI or DDCI), 
+- dolo: localization of orbitals,
+- exsci also named casdiloc: selected MRCI (quasi linear MRCI),
+- noscf: to optimize orbitals (using MR-SCI and density matrices of the states, different spin multiplicity or spatial symmetry allowed),
+- faiano: to transform a basis set in an ANO form (sometimes useful for the localization)
 - etc...
 
   
@@ -40,3 +40,8 @@ Related Papers
 
 - **DOLO (DO Local Orbitals)**
   [Direct generation of local orbitals for multireference treatment and subsequent uses for the calculation of the correlation energy](http://dx.doi.org/10.1063/1.1476312), Daniel Maynau, Stefano Evangelisti, Nathalie Guihéry, Carmen J. Calzado and Jean-Paul Malrieu, J. Chem. Phys. 116, 10060 (2002)
+
+Manuals
+=======
+
+
