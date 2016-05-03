@@ -34,7 +34,7 @@ CASDI and (SC)2 size-consistency correction
 
 EXSCI (CASDILOC) 
 
-| `Selected excitation for CAS-SDCI calculations`
+| `Selected excitation for CAS-SDCI calculations`_
 
 | Bories, B., Maynau, D. and Bonnet, M.-L. (2007), J. Comput. Chem., 28: 632–643.
 
