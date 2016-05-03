@@ -1,0 +1,32 @@
+
+==============================================================
+     modif_fermi
+==============================================================
+
+deplace des orbitales 
+1. depuis les occupees vers les virtuelles
+2. depuis les virtuelles vers les occupees
+
+
+En entree :
+
+fich1     : fichier d'orbitales a modifier (en clair, format molcas)
+SCH_FERMI : fichier cree par schmudorb, qui donne le niveau de Fermi
+            CE FICHIER RESORTIRA MODIFIE DE modif_fermi
+
+
+En sortie :
+
+fich2     : fichier d'orbitales reordonne (en clair, format molcas)
+SCH_FERMI : qui a ete modifie
+
+
+En donnees :
+ 
+ &modif_fermi fich1='FICH1',fich2='FICH2',
+              v_o='label1;s;n','label3;s;n','label3;s;n',...
+	      labels des orbitales transferees depuis les virtuelles vers
+	      les occupees.
+	      avec : s=symetrie de l'orbitale transferee (1 caractere)
+	             n=numero de l'orbitale dans sa symetrie (car pour un meme 
+		     label il peut y avoir plusieurs orbitales)

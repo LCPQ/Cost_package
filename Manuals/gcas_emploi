@@ -1,0 +1,120 @@
+   GCAS   GCAS   GCAS   GCAS   GCAS   GCAS   GCAS   GCAS   GCAS   GCAS
+
+-------------------------------------------------------------------
+fait la reunion de plusieurs fichiers RasOrb pour creer un fichier
+d'orbitales ou :
+ - les occupees, actives et virtuelles 
+   sont prises dans les differents RasOrb
+
+Methode :
+          Aller prendre les occupees, actives et virtuelles 
+          dans tous les fichiers RasOrb
+          Certaines actives peuvent etre "en double", ayant
+          ete generees par plusiurs rasscf differents. Elles ne 
+          sont alors pas identiques, mais presque.
+
+Etape 1   Actives : 
+          Construire la matrice de recouvrement entre toutes les actives
+          la diagonaliser. On obtient des valeurs propres presque entieres.
+          valeur propre 1. Correspond a une active generee 1 fois
+          dans les calculs rasscf precedents. Le vecteur propre correspond
+          a l'orbitale active
+          valeur propre ~n. L'active etait presente n fois dans les Rasorb
+          le vecteur propre est une moyenne de toutes les actives similaires
+          valeur propre ~0. pour chaque valeur propre ~n, il y a n-1
+          valeurs propres ~0. Les vecteurs correspondants sont a eliminer.
+
+Etape 2   L'espace actif etant construit, on va fabriquer les occupees 
+          et les virtuelles
+          Occupees : 
+          On voudrait employer la meme metrhode que pour les actives, mais 
+          le nombre d'occupees cumule pour tous les fichiers est trop grand.
+          On ne pourrait pas diagonaliser.
+          Donc : 
+          - on prend le fichier numero 1
+          - on boucle sur les occupees
+          - pour l'occupee n, on cherche son equivalent dans tous les autres
+            fichiers
+          - si on tombe sur une active dans un des fichiers, on laisse tomber
+            l'orbitale
+          - sinon, on a nf orbitales, nf etant le nombre de fichiers. 
+            On applique la meme methode que pour les actives (mat de 
+            recouvrement, diag, on ne retient que l'orbitale de valeur 
+            propre ~nf
+          Virtuelles : comme les occupees
+
+Etape 4   orthogonalisation hierarchisee act, puis occ+virt
+
+-------------------------------------------------------------------
+
+En entree (tous fichiers sur $WorkDir) : 
+ - Un fichier GINPORB d'orbitales localisees
+   (GINPORB est en general la copie de LOCORB obtenu par dolo)
+ - Les fichiers Info et Mono
+ - le fichier SCH_FERMI cree par dolo
+
+
+En donnee :
+ - Une ligne 
+ &gcas prefix='...',nprint=..,symm=  /
+   prefix : obligatoire
+   symm : obligatoire sur les vieilles versions de molcas, si on
+          veut une file molden.
+
+ - Une ligne de donnee pour le calcul rasscf
+ &ras name='...',symmetry=.,spin=.,nactel=.  /
+   cette ligne servira a generer les donnees de rasscf. "name" est le
+   nom donne au calcul
+
+ - Pour chaque ligne &ras name=..., il y a plusieurs lignes 
+   &ras isy=.,occvir='...',label='...........' /
+   (une par orbitale active) label est le nom de l'orbitale active 
+   telle qu'elle apparait dans LOCORB
+
+En sortie :- Un fichier d'orbitales, genre de RasOrb avec beaucoup d'actives.
+            ($Project.GCasOrb)
+           - Un fichier d'orbitales locales, correspondant a LOCORB
+            projete sur $Project.GCasOrb ($Project.LocGCasOrb)
+           - un fichier rasscf de sortie pour chaque calcul rasscf
+            (OUT_LOC_RASSCFname, name etant la donnee de & ras)
+           - un fichier d'orbitales rasscf par calcul rasscf 
+            (Project.Orb.T)
+ si on a deja fait tourner gcas pour quelques rasscf mais pas tous, le
+ programme teste l' existence  fichiers OUT_LOC_RASSCFname et Project.Orb.name
+ et, si tout est bon, ne reexecute pas rasscf.
+            
+            
+
+Exemple de donnees :
+
+gcas << EOF
+ &gcas prefix='FeL2.',nprint=0
+ &ras name='GS1',symmetry=1,spin=1,nactel=6  /
+ &ras isy=2,occvir='OCC',label='O_FE.D.LP03' /
+ &ras isy=3,occvir='OCC',label='O_FE.D.LP02' /
+ &ras isy=4,occvir='OCC',label='O_FE.D.LP01' /
+
+ &ras name='GS5',symmetry=1,spin=5,nactel=6  /
+ &ras isy=2,occvir='OCC',label='O_FE.D.LP03' /
+ &ras isy=3,occvir='OCC',label='O_FE.D.LP02' /
+ &ras isy=4,occvir='OCC',label='O_FE.D.LP01' /
+ &ras isy=1,occvir='VIR',label='O_FE.D.VI01' /
+ &ras isy=1,occvir='VIR',label='O_FE.D.VI02' /
+
+ &ras name='MLCT2',symmetry=1,spin=3,nactel=2  /
+ &ras isy=2,occvir='OCC',label='O_FE.D.LP03' /
+ &ras isy=2,occvir='VIR',label='O_N2~C5.DL01' /
+
+ &ras name='MLCT3',symmetry=1,spin=3,nactel=2  /
+ &ras isy=3,occvir='OCC',label='O_FE.D.LP02' /
+ &ras isy=3,occvir='VIR',label='O_N18~C21.DL01' /
+
+ &ras name='MLCT4',symmetry=1,spin=3,nactel=2,ciroot=2,2,1  /
+ &ras isy=4,occvir='OCC',label='O_FE.D.LP01' /
+ &ras isy=4,occvir='VIR',label='O_N2~C5.DL' /
+ &ras isy=4,occvir='VIR',label='O_N18~C21.DL' /
+
+ /
+EOF
+
+

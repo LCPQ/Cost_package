@@ -1,0 +1,75 @@
+******************************************************************************
+ijkloc : Programme de transformations d'integrales moleculaires ecrites
+         en orbitales de symetrie a des integrales moleculaires ecrites
+         en orbitales desymetrisees
+
+2 etapes : 1. desymetrisation des orbitales. C'est une partie 
+              completement independante
+           2. transformation des integrales, obtention des orbitales
+              locales
+
+******************************************************************************
+
+        Utilisation :
+                      - Etape scf
+                      - Etape localisation  -->  orbitales locales
+                      - motra-molcost       -->  files ijcl,Info,Mono
+                      - ijkloc
+                      - exsci
+
+        Fichiers :
+
+        En entree :       ('~' =PREFIX)
+                    - ~Mono
+                    - ~Info
+                    - SCH_FERMI (creee par schmud)
+                    - Input Orbitals (inporb)
+                    - calcul non cholesky: 
+                        - file d'integrales ~ijcl
+                    - calcul cholesky: 
+                        - CHOL_VEC
+                        - MO_ONEINT
+
+        En sortie : - ~Ijcllocinfo (information pour exxci)
+                    - ~ijclloc2  (integrales bielectroniques a 2 indices 
+                                 differents)
+                    - ~ijclloc3  (3 indices differents)
+                    - ~ijclloc4  (4 indices differents)
+                    - ~Infoloc   (fichier de type Info, pour les orbitales 
+                                  locales)
+                    - ~ijclloc   (eventuellement) fichier ijcl pour casdi
+                    - ~IJCLLOC   (eventuellement) fichier IJCL pour casdi
+                    - DESYMORB   orbitales desymetrisees  
+                    - ORB_IJKLOC orbitales locales
+
+
+Donnees :
+           Donnee (maj: correspond a des donnees obligatoires)
+ &ijkloc
+
+Donnees obligatoires :
+           PREFIX='...'
+
+Donnees facultatives :
+           nprint       0,1,2                                  0
+           symm         donnees de seward qui suivent la
+                        ligne "SYMMETRY" (dans le meme ordre !)
+                        si symm='SEWARD', la donnee est lue
+                        dans les donnees de seward (a condition
+                        que les donnees de seward et de ijkloc
+                        soient dans le meme fichier)          'SEWARD'
+           info1        file Info en entree                   ~Info
+           mono1        file Mono en entree                   ~Mono
+           ijcl1        file ijcl en entree                   ~ijcl
+           inporb       orbitales locales symetriques         INPORB
+           mem          memoire demandee en Mo                500
+           ycdloc       creation des files ijclloc* pour
+                        excci                                 T      
+           ycd          T : genere des fichiers (ijclloc, Infoloc, Monoloc)
+                            pour enchainer sur casdi
+                            il faut renommer les files ijclloc, Infoloc, Monoloc
+                            en ijcl, Info, Mono               F
+           ycl1         (si ycd) T : ecriture en clair 
+                        sur IJCLLOC                           F
+ 
+ 

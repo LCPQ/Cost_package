@@ -1,0 +1,59 @@
+PROGRAMME DE PROJECTION D'UN JEU D'ORBITALES DANS L'ESPACE D'UN AUTRE
+JEU D'ORBITALES
+
+Exemple : on a un jeu d'orbitales locales (occ, virt)
+          et un jeu d'orbitales SCF       (occ, virt)
+          on projette les occupees locales dans les scf 
+	  on projette les virt locales dans les scf
+	  on reorthogonalise
+	  ainsi, on a un jeu d'orbitales locales de qualite SCF
+
+
+ENCHAINEMENT DES PROGRAMMES
+
+schmudorb
+proj_scf
+cp NONORLOC_scf NONORLOC
+schmudort
+
+Ce que fait le programme :
+
+schmudorb cree un jeu d'orbitales locales non orthogonales (ds le fich NONORLOC)
+
+proj_scf projette sur les orb scf (les met dans NONORLOC_scf, 
+ecrit comme NONORLOC)
+cp NONORLOC_scf NONORLOC : on ecrase le fichier primitif
+les fichiers NONORLOC et NONORLOC_scf sont exprimes dans une base d'OA
+orthogonalisees (OAO)
+le fichier contenant les OAO s'appelle "OAO"
+les 3 fichiers OAO, NONORLOC et NONORLOC_scf sont donnes en clair sous
+la forme des fichiers d'orbitales de Molcas, avec des labels
+
+schmudort on orthogonalise
+
+
+EN ENTREE
+fichiers OAO et NONORLOC
+         un fichier d'orbitales scf ou casscf en orbitales delocalisees 
+	 (ScfOrb ou RasOrb), format en clair, orbitales Molcas.
+EN SORTIE
+fichier NONORLOC_scf, de meme type que NONORLOC
+
+DONNEES
+
+ &pscf
+ prefix=
+ calcul='SCF'       CASSCF : il y a des orbitales actives
+ fermi=0            donnee facultative si calcul='SCF'
+                           obligatoire si calcul='CASSCF'
+ act='A_'           alors les actives sont reconnues par le fait que
+                    leur label commence apr A_
+		    aucune autre donnee n'est testee pour le moment !
+ scf=' '            fichier contenant les orbitales de reference 
+                    (qui definissent les espaces sur lesquels on projette)
+		    ' ' : alors le nom est prefixScfOrb
+		    si calcul='CASSCF', changer la valeur de scf!
+		    
+ /
+ 
+	  

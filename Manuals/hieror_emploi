@@ -1,0 +1,49 @@
+HIEROR
+
+Programme d'orthogonalisation d'orbitales exprimees dans une base d'OA
+
+S'execute apres molcost, lit le fichier "Mono"
+
+Fichiers en entree :
+Mono (de molcost)
+INPORB (orb a orthogonaliser)
+
+Fichiers en sortie :
+ORTORB (orb orthonormales)
+
+Donnees :
+ &hieror prefix'...',yoa_ort=   /
+ pr1 
+ is1 io1 io2 io3 io4 ...
+ is1 io5 io6 ...
+ is2 io1 io2 ...
+ ...
+ pr2
+ is1 io1 io2 io3 io4 ...
+ is2 io1 io2 ...
+ pr3
+ ...
+FINHIEROR
+
+avec : yoa_ort=T : les OA sont deja orthogonales, la matrice de recouvrement
+       est remplacee par la matrice unite (defaut F)
+
+       pr1,pr2,pr3 : priorites des orbitales (1,2,3...)  (pas de limitation)
+       les priorites doivent etre donnees par valeurs croissantes, 1 
+       correspondant aux orbitales les plus prioritaires
+       puis on donne les orbitales une a une
+       is1,is2,is3 : symetrie des orbitales donnees
+       io1,io2,io3 : numero des orbitales dans leur symetrie
+
+on finit les donnees par :
+finhieror
+
+donnees compactees :
+au lieu de 
+ pr1
+ 1 3 4 5 6 7 9 12
+on peut donner
+ pr1
+ 1 3-7 9 12
+
+

@@ -1,0 +1,124 @@
+
+                      ***********
+                      * MOLCOST *
+                      ***********
+
+Interface between molcas and the toulouse programs
+
+I What does the program?
+
+1. After seward
+   - generates an formatted Info file containing various information about
+     the system studied
+
+   - generates an unformatted Mono file containing one-electron operators 
+
+2. After motra
+   generates the same files, with Molecular Orbital information if files
+   TraOne and TraInt exist.
+
+
+
+II. DATA
+
+a namelist
+
+ &cost
+ prefix='Project.'        (required data)
+ molcas=  version of molcas: 4 or 5 or 54 (default 0: in that case, molcost
+          analizes the OneInt file to get the molcas value)
+ ycl=     T: generates a formatted file of MO integrals (default F)
+ yao=     T: reads and interfaces the AO integrals (default T)
+ ymo=     T: reads and interfaces the OM integrals (default T)
+ ybas=    T: reads and interfaces the COM file     (default F)
+ ysym=    T: the one-electron operators in the Mono file are
+             square matrices
+          F: the one-electron operators in the Mono file are
+             trianguler matrices                   (default F)
+             (see in paragraph IV the form of file Mono)
+ fermi=   0: fermi level (number of occupied orbitals in each symmetry)
+             (required if molcost runs after motra)
+ ychol=   F: T in Cholesky calculation
+
+
+
+III. Aspect of the Info file (example of ethylene molecule) ("prefix"Info)
+
+=============================================
+File: C2H4.Info
+created by molcost
+date:
+=============================================
+ &cost_AO
+ nsym=8
+ isym=   6,   6,   3,   3,   1,   1,   0,   0,
+ norb=   20
+ its=
+      1,2,3,4,5,6,7,8,
+      2,1,4,3,6,5,8,7,
+      3,4,1,2,7,8,5,6,
+      4,3,2,1,8,7,6,5,
+      5,6,7,8,1,2,3,4,
+      6,5,8,7,2,1,4,3,
+      7,8,5,6,3,4,1,2,
+      8,7,6,5,4,3,2,1,
+ enuc=     33.382397244601
+ natom=   2
+ coor=
+        1.2651715494,        0.0000000000,        0.0000000000,
+        2.2159663935,        1.8187044168,        0.0000000000,
+ atom=
+ 'C   ','H   ',
+ label=
+ 'C   1s  ','C   1s  ','C   1s  ','C   2px ','H   1s  ',
+ 'H   1s  ','C   1s  ','C   1s  ','C   1s  ','C   2px ',
+ 'H   1s  ','H   1s  ','C   2py ','H   1s  ','H   1s  ',
+ 'C   2py ','H   1s  ','H   1s  ','C   2pz ','C   2pz ',
+ /
+
+if Info is created after motra, a second namelist appears:
+
+ &cost_MO
+ nsym=8,norb= 20,noc=  8
+ itsym=
+ 1,1,1,2,2,3,4,5,1,1,1,2,2,2,2,3,3,4,4,6,
+ isym=  6,  6,  3,  3,  1,  1,  0,  0,
+ frozen=  0,  0,  0,  0,  0,  0,  0,  0,
+ enuc=  0.333823972446E+02
+ ycl=F
+ &end
+
+
+
+IV. How to read the unformatted Mono file   ("prefix"Mono)
+
+ open(1,file=...)
+
+ 1. ysym=F (one-eletron operators in triangular form)
+
+  a. seek the label: 
+     - One-electrons integrals: label= '==ONEINT MATRIX (TOTAL)'
+     - Overlap matrix:          label= '==OVERLAP MATRIX (SYM)'
+
+     character*80 aa
+     do
+        read(1) aa
+        if(trim(aa).eq.label) then
+
+  b.         read the operator
+           - read the length of the operator, the number of symmetries,
+             the number of orbitals by symmetry
+             read(1) len,nsym,(isym(k),k=1,nsym)
+           - read the operator
+             read(1) hmono(1:len)
+        endif
+     enddo
+
+other one electron operators must be added...
+        
+
+     
+
+
+
+

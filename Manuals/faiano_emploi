@@ -1,0 +1,132 @@
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ faiano
+ fabrication d'ANO
+ Utilisation :
+ 1. faire un calcul scf ou casscf SANS SYMETRIE sur l'atome pour 
+ obtenir les OM a partir
+ desquelles on construira les ANO. Pour un calcul sur un atome, 
+ il y a en general des orbitales degenerees (3p, 5d,...) Les OM correspondantes
+ DOIVENT etre degenerees. pour cela utiliser des occupations egales 
+ (fractionnaires en general).
+ ex : pour C, entrer :
+occu
+4
+occn
+2. 3*0.66666666666666
+pour avoir 3 p degenerees
+Pour les metaux de transition, il faut reussir a avoir les D degenerees.
+Ce n'est pas toujours facile, la S s'intercalant quelquefois. Au besoin, mettre
+a la S la meme occupation que les D. ex pour Ru
+occu
+10
+occn
+2. 2. 2. 2. 6*1.3333333333333      (s,px,py,pz,5d+s) peu importe si la S
+s'intercale
+
+ 2. Copier le fichier d'orbitales
+ dans un fichier nomme ORB.
+ 
+ 3. extraire du fichier dans baslib_library de molcas 
+ la base qui nous interesse (extraire TOUT ce qui concerne
+ l'atome, c.a.d. jusqu'a la ligne qui precede la donnee de
+ l'atome suivant)
+ 4. l'ecrire dans le fichier nomme BAS
+ 5. Editer le fichier BAS. Il faut lui donner une forme bien
+ definie (car les differentes base donnees dans baslib_library
+ ont des formats tres variables)
+          ! ligne 1 definition de la base
+          ! lignes 2,3 commentaires
+          ! ligne 4 charge, lmax
+          ! ligne 5 : vide
+          ! ligne 6 : ngauss, ncont pour les s
+          ! ngauss lignes exposants (1 par ligne !)
+          ! ngauss lignes de ncont coefs (les ncont coefs peuvent etre
+          ! sur plusieurs lignes). Completer les lignes si necessaire,
+          ! pour bien avoir ncont coefs, comme dans l'exemple donne
+          !  ngauss, ncont pour les p
+          ! ...
+          ! 
+          ! exemple qui marche :
+          !
+! /Ni.ECP.Seijo.9s6p6d.3s3p4d.16e-NR-AIMP.
+! L.Seijo, Z.Barandiaran, and S. Huzinaga, J.Chem.Phys. 91(1989)7011
+! core[Mg] val[3p,4s,3d]     (711/411*/3111d)=3s3p4d recomended
+!  16.000000         2
+! 
+!     9    3
+!    4285.323290
+!    651.9116660
+!    148.4310420
+!    14.61565810
+!    5.084914950
+!    2.695829830
+!    .9637774780
+!    .1247067220
+!    .4440127210E-01
+!   -.001291434550  0.  0.
+!   -.008765641940  0.  0.
+!   -.026885866400  0.  0.
+!    .120663572000  0.  0.
+!    .088548487800  0.  0.
+!   -.211511413000  0.  0.
+!   -.300423481000  0.  0.
+!    .616312812000  1.  0.
+!    .514892857000  0.  1.
+!     6    3
+!    335.2111400
+!    78.05211610
+!    23.61618700
+!    2.862374010
+!    .9462498720
+!    .1110000000
+!   -.017329090100   .000000000000   .000000000000
+!   -.105886106000   .000000000000   .000000000000
+!   -.251733492000   .000000000000   .000000000000
+!    .623521318000   .000000000000   .000000000000
+!    .470407510000  1.000000000000  0.000000000000
+!    .000000000000  0.000000000000  1.000000000000
+!    47.29662940
+!    13.20797580
+!    4.435978690
+!    1.482292030
+!    .4385855920
+!    .1316000000
+!    .028692884000   .000000000000   .000000000000   .000000000000
+!    .153696374000   .000000000000   .000000000000   .000000000000
+!    .374873996000   .000000000000   .000000000000   .000000000000
+!    .473227536000  1.000000000000   .000000000000   .000000000000
+!    .312182257000   .000000000000  1.000000000000   .000000000000
+!    .000000000000   .000000000000   .000000000000  1.000000000000
+! *
+! * Core AIMP: NI3F-3S
+! *
+! * Local Potential Paramenters : (ECP convention)
+! *                               A(AIMP)=-Zeff*A(ECP)
+! M1
+!    10
+!    305000.0000
+!    40270.00000
+!    ...
+
+ 6. lancer faiano, sans donnees
+ si le programme donne une erreur du genre :
+ on selectionne trop d'orbitales
+ ou
+ stop  kk.ne.nbcon
+ c'est que le OM sont tres impure (melanges Px/Py par exemple) et
+ n'ont pas pu etre reconnues. 
+ Les purifier d'abord :
+ lancer purigom (sans donnees, il lit les fichiers BAS et ORB,
+ il cree le fichier "PUR") ; mv PUR ORB ; lancer faiano
+ 7. La base ANO est dans un fichier nomme ANO
+ copier ce fichier dans un fichier dont le nom est celui du
+ fichier dans lequel on a pris la base dans baslib_library
+ exemple: cp ANO ECP
+ 8. ajouter dans le script l'emplacement de la nouvelle base
+   exemple :
+  mkdir BASLIB
+  ln -sf $CurrDir/ECP BASLIB/ECP
+ 9. ajouter dans l'input de seward " / BASLIB" a la fin de la ligne definissant la base puis verifier en relancant seward, scf
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+

@@ -1,0 +1,88 @@
+
+      *******************************************************
+      =======================================================
+                             LOCCASCF'
+      =======================================================
+      *******************************************************
+
+Local CASSCF
+
+The program executes a succession of steps
+
+1. Orbital transformation
+    - 2 possibilities:
+         - motra/molcost
+         - ijkl
+
+2. CASCI calculation
+         - casdet/casdi 
+
+3. Density matrix calculation
+    - 2 possibilities:
+         - casdet/casdi  (diagonalization of CAS+S)
+         - costnevpt/rodyall (contracted perturbation)
+
+4. Diagonalization of the Density Matrix  -->  natural Orbitals
+         locnats
+
+--> iterate: goto 1.
+
+
+
+Input Files:  
+ One Electron Atomic Integrals    prefix_One
+ Two Electron Atomic Integrals    prefix_Two
+ Orbitals                         INPORB
+
+Output Files
+LOCORB2
+
+
+Data:  (case letters: compulsory)
+ &LOCCASSCF 
+                   Default           
+ PREFIX
+ SYMM                               data SYMMetry of seward
+ transf            IJKL             IJKL to run ijkl  (step 1.)
+                                    MOTRA to run motra
+                                    CHOLESKY
+
+ density           RODYALL          RODYALL to perform contracted perturbation
+                                    CASDI to perform CAS+S
+ 
+ nmat              1                number of different matrices (= nb of
+                                    symmetries...)
+ netat             nmat*1           number of states for each one of the nmat 
+                                    matrices
+ metat                              rank of the nmat states
+ coef              n*1.
+
+example: 2 singlets (1st and 2nd), 3 triplets (2n,3rd and 5th)
+         weights: 2.,1.,  1.,0.5,2.
+nmat=2,netat==2,3,metat=1,2,  2,3,5,  coef= 2.,1.,  1.,0.5,2.
+
+ frozen,delete     nsym*0
+ maxit             30               max number of iterations
+ conv              1.d-6            Energy convergence
+
+ inac              nsym*0           nb of core orbitals in each symmetry
+ act               nsym*0           nb of active orbitals in each symmetry
+ nactel            0                nb of active electrons               
+
+ casdet            'casdet'
+ casdi             'casdi90'
+ costnevpt         'costnevpt'
+ rodyall           'rodyall
+ locnat            'locnat'
+ ijkl              'ijkl'  
+ reordens          'reordens'
+(location of the programs to be used)
+
+
+ &casdi
+ Among the data of namelist &dav of casdi:
+ gener,ms2,is0,iprec,niter,syspin
+
+ nessai=  two different data for the corresponding one of &dav
+ nessai: nessai of the first iteration of casdi (default: 0)
+ nessai2: nessai of the other iterations of casdi  (default: 2)

@@ -1,0 +1,44 @@
+**************************************************************************
+ecrimat   ecrimat   ecrimat   ecrimat   ecrimat   ecrimat   ecrimat   
+**************************************************************************
+
+Programme d'ecriture sur papier de la matrice d'IC calculee par CASDI
+
+Donnees :
+      call LECNAM('&ECRM',namel,5,ierr,1)
+      call namela(namel,prefix,'PREFIX')
+      call namela(namel,DET,'DET')
+      call namela(namel,MAT,'MAT')
+      call namela(namel,CDI,'CDI')
+      call namela(namel,INFO,'INFO')
+      call namela(namel,DAVEC,'DAVEC')
+      call nameli(namel,PRECIS,'PRECIS',4)
+      call namell(namel,YDETV,'YDETV',1)
+      call nameli(namel,NPRINT,'NPRINT',4)
+
+
+Fichiers en entree :
+
+davec       de casdi: calcul='MD' ou calcul='D'
+det         de casdet
+mat         de casdi: calcul='M'
+info        de molcost
+cdi         de casdet
+
+
+exemple :
+
+seward sewin
+scf scfin
+motra motrain
+molcost < molcostin
+casdet < casdetin
+casdi90 < casdiinM
+casdi90 < casdiinD
+ecrimat << EOF
+ &ECRM prefix='...'  /
+EOF
+
+ - ou, dans casdiinM, on calcul='M' (creation d'un fichier .mat contenant la matrice)
+ - dans casdiinD, on calcul='D' (lecture du fichier .mat, diagonalisation)
+ - dans ecrimat, la seule donnée obligatoire est prefix

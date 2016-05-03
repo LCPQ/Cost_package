@@ -1,0 +1,22 @@
+***********
+copie_ordre
+***********
+
+Ce que fait le programme :
+1. Il lit 2 fichiers d'orbitales (sous leur forme en clair) fich1 et fich_ref
+2. De "fich1", on gardera les coefficients des orbitales.
+3. De "fich_ref", on gardera l'ordre des orbitales, leurs occupations
+   et leurs labels.
+4. Le nom du fichier de sortie (reordonne) est "fich2"
+
+Le reordonnancement se fait par la lecture des labels A PARTIR DU 3eme 
+caractere (on ne tient pas compte du debut du label A_, C_ ...)
+---> Les deux fichiers doivent avoir les memes labels (ils peuvent differer
+par les 2 premiers caracteres)
+
+
+donnees : 
+
+ &cop fich1='...',fich2='   ',fich_ref='   '  /
+
+

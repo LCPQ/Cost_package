@@ -1,0 +1,46 @@
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!     lit deux fichiers d'obitales sur orbin1 et orbin2
+!     choisit des orbitales dans un et l'autre fichier pour creer un
+!     troisieme fichier
+!     orthogonalise par Schmidt les secondes au premieres      
+!     fichiers lus : orbin1 et orbin2      
+!     les ecrit sur orbout
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!      
+!
+donnees :
+ &insor
+ orbin1='nom_fich_1'
+ orbin2='nom_fich_2'
+ orbout='nom_fich_sortie'
+ /
+
+puis une suite de lignes de 3 nombres entiers
+
+is1 if1 n1 [label=****]
+is2 if2 n2 [label=****]
+
+ou : 
+
+la ligne numero i (isi ifi ni) definit l'orbitale i du fichier orbout
+isi est la symetrie de l'orbitale
+ifi est le fihier ou elle est a lire (orbin1 ou orbin2)
+ni est son numero dans la symetrie, dans le fichier lu
+
+Les symetries doivent arriver en ordre
+
+
+Contraction des donnees
+On peut donner plusieurs ligne a la fois. Par exemple :
+la donnee :
+2 1 3-6
+genere les lignes :
+2 1 3
+2 1 4
+2 1 5
+2 1 6
+
+Donnees des labels :
+Si label= n'est pas donne a la fin de la ligne, le label est lu dans le
+fichier des orbitales
+Sinon, le label est pris dans les donnees

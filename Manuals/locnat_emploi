@@ -1,0 +1,22 @@
+ &locn 
+
+ obligatoires : 
+ prefix=
+ orbv='orbitales_d'entree'
+ orbn='orbitales_de_sortie'
+
+ facultatives
+ noac,numac : nb d'orbitales actives, numeros des orbitales actives
+ noac et numac sont retrouvees a partir des donnees de la loclisation
+ (les orbitales actives sont reperees par leur label A_...)
+ Si ca ne correspond pas a ce qu'on veut, donner noac et numac (c'est meme conseille !)
+ ngel=   donnees frozen de motra
+ ndel=   donnees delete de motra
+ nmat= nombre de fichiers de matrices densite
+ netat (1,nmat) nombre de vecteurs consideres dans chaque fichier
+ densmat (1,nmat) noms des fichiers 
+ metat numeros des vecteurs consideres
+ coef poids sur les diff vecteurs
+ ex 3 fichiers, fich1 vect 2 ; fich2 vect 3 et 4 ; fich3 vect 1
+ nmat=3,netat=2,4,1,metat=2,  3,4,  1,
+ coef=1.,0.5,0.5,   1.,  0.7,  (par ex)

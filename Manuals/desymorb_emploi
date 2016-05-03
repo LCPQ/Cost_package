@@ -1,0 +1,39 @@
+                       DESYMORB
+!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+! Desymetrisation des orbitales molcas (fichier type INPORB)
+! 1) execute un rasscf CIONLY
+! 2) recupere le fichier molden, lit les orbitales desymetrisees
+! 3) recupere les labels des OA, les reordonne
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!
+Donnees
+
+ &desymorb prefix=
+ basis=                  atome par atome, donner le nombre de s,p,d...
+                         basis='h1:1s',C3:3s2p1d',...  (obligatoire)
+ symm=                   symetries comme donnees dans seward
+                         ex : symm='X XY'
+ mono1                   nom du fichier Mono (def. prefixMono)
+ info1                   nom du fichier Info (def. prefixInfo)
+ rasscf                  T: le fichier molden n'exixte pas, on 
+                         execute rasscf (def. T)
+ 
+
+Utilisation
+
+cp "nom_du_fichier_a_desymetriser" INPORB
+desymorb
+
+
+
+Fichiers
+
+en entree :
+ Info1
+ Mono1
+ INPORB         (orb en clair, a desymetriser)
+
+en sortie
+ DESYMORB       (orb en clair, desymetriseees)
+ DESYMORB2      (fichier binaire pour ijkloc)

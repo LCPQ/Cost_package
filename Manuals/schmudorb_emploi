@@ -1,0 +1,901 @@
+******************************************************************************
+schmudorb/schmudort : generalites
+
+schmudorb : permet de construire un jeu d'orbitales locales non orthogonales
+
+schmudort: effectue une orthogonalisation hierarchisee des orbitales de
+           schmudorb
+	   classe 1 : (prioritaire) actives
+	   classe 2 : coeur
+	   classe 3 : les autres
+******************************************************************************
+
+***********************************
+schmudorb/schmudort : mode d'emploi
+***********************************
+
+FICHIERS : Fichier de molcost (integrales en base atomique, matrice de recouvrement,...)
+           des orbitales ScfOrb ou autre (donc, un calcul d'integrales, seward si molcas)
+
+
+===============================================================================================
+************************
+DONNEES GENERALES
+************************
+
+1) DONNEES DE DEBUT :  
+ &smufil prefix='debut_des_noms_de_fichier'  /
+
+
+ &smu nprint= 0,1,2  (def 0)
+ orb='fichier_d'orbitales_scf'  (donnee obligatoire)
+ /
+
+2) DONNEES CONCERNANT L'ORTHGONALISATION DE LA BASE D'ORBITALES ATOMIQUES
+exemple :
+ &oao  /
+c1 1s(1) pr=1
+c1 1s(2) pr=2
+c1 2px(1) pr=2
+c1 2py(1) pr=2
+c1 2pz(1) pr=2
+o1 1s(1) pr=1
+o1 1s(2) pr=2
+o1 2px(1) pr=2
+o1 2py(1) pr=2
+o1 2pz(1) pr=2
+fin
+
+
+priorite des orbitales dans l'orthogonalisation hierarchisee
+sur cet exemple :
+      c1 1s(1) pr=1 : atome de nom c1 (dans les donnees du progr d'integrales)
+                      1s(1) 1ere orbitale de nom 1s qui apparait dans les OA
+                      pr=1 priorite 1 (orthogonalisee en priorite)
+      o1 2ps(2) pr=2  atome o1, 2eme orb 1s (donc orb 2s), priorite 2
+      o1 2px(1) pr=2  atome o1, 1ere orb 2px (donc orb 2px), priorite 2
+      etc...
+      remarques :
+                 - Toutes les lettres sont indifferemment en majuscules ou en 
+		 minuscules
+                 - on voit qu'on a vraiment interet a utiliser des bases d'ANO
+                 pour que par ex 2px(1) corresponde bien a l'orbitale de valence
+                 2px
+                 - on donne autant de priorites qu'on veut
+                 - les orbitales non donnees sont de priorite pmax+1
+
+
+3) DONNEES DEFINISSANT LES ORBITALES MOLECULAIRES LOCALES
+ &orb  /
+c_c    c1 1s(1) (1 0)
+c_o    o1 1s(1) (1 0)
+o_odbt o1 1s(2) 2pz(1) (1 0) ref 1
+o_cdbt c1 1s(2) 2pz(1) (1 0) ref 2
+o_co c1 1s(2) 2pz(1) : o1 1s(2) 2pz(1) (3 1) proj 1,2
+o_pico c1  2px(1) 2py(1) : o1  2px(1) 2py(1) (2 2)
+fin
+
+c'est la donnee des liaisons :
+
+Analyse de la donnee  "c_o    o1 1s(1) (1 0)" :
+c_o : max 12 caracteres. c="coeur". "_" obligatoire. puis 10 caracteres au choix
+      pour caracteriser la liaison. l'orbitale de liaison obtenue sera 
+      caracterisee sous ce label (c_o) dans la suite des programmes.
+o1 1s(1) : comme dans &oao
+(1 0) : occupations : 1 occupee, 0 antiliante
+(on decrit ici le coeur 1s de o1)
+
+Analyse de la donnee  "o_odbt o1 1s(2) 2pz(1) (1 0) ref 1" :
+on decrit le doublet de o1
+o="orbitale" (en general, orbitale de valence)
+ 1s(2) 2pz(1) : orbitales qui le decrivent (2eme s (la 1ere etait pour le
+                coeur), 1ere pz)
+(1 0) : occupations : 1 occupee, 0 antiliante
+ref 1 : voir plus loin
+
+Analyse de la donnee  "o_pico c1  2px(1) 2py(1) : o1  2px(1) 2py(1) (2 2)" :
+systeme pi de CO
+les atomes et leurs orb sont donnes a la suite les uns des autres, separes par
+":". Il n'y a pas de limite au nombre d'atomes, ni au nombre d'orbitales.
+Il y a 2 systemes pi, un x, un y
+(2 2) : 2 liantes, 2 anti-liantes
+
+o_co c1 1s(2) 2pz(1) : o1 1s(2) 2pz(1) (3 1) proj 1,2
+systeme sigma de CO
+il y a un probleme. On donne ici toutes les orb de valence de CO, donc on va
+generer : 1. la liante et l'A-L CO
+          2. Le doublet O
+          3. Le doublet C
+Pb1. on avait deja construit les doublets. On les a 2 fois
+Pb2. toute cette partie sigma est melangee
+---> solution :
+on va donc eliminer les 2 doublets contenus dans o_co par soustraction de
+o_odbt et o_cdbt. On projette donc les orbitales obtenues ici sur 
+o_odbt et o_cdbt pour faire cette soustraction. 
+D'ou les donnees proj 1,2 et ref 1 , ref 2
+proj 1,2 signifie qu'on soustrait les references 1 et 2. Il n'y a pas de
+limite au nombre de proj et de ref
+rem : l'occupation donnee (3 1) est AVANT projection
+
+
+PROJECTIONS ET REFERENCES
+
+1. Quand en a-t-on besoin ?
+2. Orbitales a la fois ref et proj
+3. syntaxe et regles
+
+1. Quand en a-t-on besoin ?
+
+On en a besoin chaque fois qu'une orbitale inclut une orbitale deja donnee
+
+.Exemple 1 : H2O
+
+H1
+ \              (Un doublet hors du plan n'est pas represente)
+  O :
+ /
+H2
+
+Donnee des 2 doublets O
+o_doub o 1s(2) 2p(1) (2 0) ref 1                (2 occ)
+Donnees des liaisons CH
+o_oh1 o 1s(2) 2p(1) : h1  1s(2) 2p(1) (3 1) proj 1  (2 Doub, 1 Liante, 1 A-L)
+o_oh2 o 1s(2) 2p(1) : h2  1s(2) 2p(1) (3 1) proj 1  (2 Doub, 1 Liante, 1 A-L)
+
+Chaque liaison CH genere necessairement les 2 doublets. On les soustraits 
+par projection sur o_doub
+
+
+.Exemple 2 : donnees avec symetrie
+
+C2 - C1
+      \
+       C4
+        | --------->  axe de symetrie
+       C4
+      /
+C2 - C1
+
+Donnee des 2 liaisons C1-C2
+o_C1C2 c1 1s(2) 2p(1) : c2 1s(2) 2p(1) (2 2)  (2, car 2 liaisons sont definies)
+Donnee des 2 liaisons C1-C4
+o_C1C4 c1 1s(2) 2p(1) : c4 1s(2) 2p(1) (3 3)  (3, car 3 liaisons sont definies:
+                                               2 C1-C4, et C4-C4, puisque toute
+                                               la valence de C4 est presente)
+On a alors un systeme delocalise sur C1-C4-C4-C1
+Si on veut avoir ne liaison C4-C4 localisee, il faut la donner:
+o_C4C4 c4 1s(2) 2p(1) (1 1) ref 1
+...et la soustraire des C1-C4
+o_C1C4 c1 1s(2) 2p(1) : c4 1s(2) 2p(1) (3 3) proj 1
+
+2. Orbitales a la fois ref et proj
+
+.Exemple
+
+   C3 - C2             doublet N:
+  /       \            o_n n 1s(2) 2p(1) (1 0) ref 1
+C4         N :         liaison C2-N: (contient 1 Liante, 1 A-L, le doublet)
+  \       /            o_c2N C2 1s(2) 2p(1) : N 1s(2) 2p(1) (2 1) ref 2 proj 1
+   C5 - C6             liaison C6-N:
+                       o_c6N C6 1s(2) 2p(1) : N 1s(2) 2p(1) (2 1) ref 3 proj 1
+                       Autres liaisons sigma:
+                       o_c2c3  C2 1s(2) 2p(1) : c3 1s(2) 2p(1) (1 1) ref 4
+                       o_c3c4  C3 1s(2) 2p(1) : c4 1s(2) 2p(1) (1 1) ref 5
+                       o_c4c5  C4 1s(2) 2p(1) : c5 1s(2) 2p(1) (1 1) ref 6
+                       o_c5c6  C5 1s(2) 2p(1) : c6 1s(2) 2p(1) (1 1) ref 7
+  systeme pi:
+o_pi n 1s(2) 2p(1) : c2 1s(2) 2p(1) : c3 1s(2) 2p(1) : &
+c4 1s(2) 2p(1) : c5 1s(2) 2p(1) : c6 1s(2) 2p(1) (11 9) proj 2,3,4,5,6,7
+ explication: le systeme pi est defini comme:
+              [toutes les liaisons de valence des C et N]
+              - [toutes les liaisons sigma (les ref 2 a 7)]
+              on doit arriver a 3 Liantes et 3 A-L
+              les ref 2 a 7 contiennent 2+2+1+1+1+1 L, 1+1+1+1+1+1 A-L,
+              soit 8 et 6 orb. On doit donc donner (11 9) pour arriver a (3 3)
+              ATTENTION: on considere que les ref 2 et 3 ont 2 Liantes, malgre
+              leur projection sur ref 1. On projette ainsi aussi implicitement 
+              sur ref 1.
+
+3. syntaxe et regles
+  - bien mettre un blanc avant et apres ref ou proj
+  - on peut ecrire   ref 3 proj 1  ou  proj 1 ref 3
+  - l'ORDRE des orbitales n'importe pas. Les donnees sont mises en memoire,
+    puis traitees en bloc a la fin. Les ref peuvent donc arriver avant ou
+    apres les proj correspondantes.
+    
+
+===============================================================================================
+
+************************
+SIMPLICATION DES DONNEES
+************************
+(Valable pour &OAO et &ORB)
+
+
+     a) 2p(n) = 2px(n) 2py(n) 2pz(n)
+        3d(n) = 3d0(n) 3d1+(n) 3d1-(n) 3d2+(n) 3d2-(n) 
+        etc...
+        les donnees precedentes deviennent alors :
+ &oao  /
+c1 1s(1) pr=1
+c1 1s(2) pr=2
+c1 2p(1) pr=2
+o1 1s(1) pr=1
+o1 1s(2) pr=2
+o1 2p(1) pr=2
+fin
+
+     b) c[1 1 2 2] 1s(2) pr=2     genere 4 lignes :
+            c1 1s(2) pr=2
+            c1 1s(2) pr=2
+            c2 1s(2) pr=2
+            c2 1s(2) pr=2
+
+     c) c* : (dans &oao)
+             genere autant de lignes que le nb d'atomes commencant par c, ou "*"
+             represente des chiffres (pour ne pas generer Cu, ou Cr ...)
+
+
+
+
+===============================================================================
+
+************************
+ORIENTATION DES LIAISONS
+************************
+
+       Quand on veut avoir une liaison directionnelle
+
+       O_C1C2 C1 1S(2) 2P(1) : C2 1S(2) 2P(1) (2,2)  PARA(C1,C2)
+       elimine les composantes perpendiculaires a l'axe C1C2
+
+       O_C1C2 C1 1S(2) 2P(1) : C2 1S(2) 2P(1) (2,2)  PARA(C1,C2,C3)
+       elimine les composantes perpendiculaires au plan C1C2C3
+       
+       O_C1C2 C1 1S(2) 2P(1) : C2 1S(2) 2P(1) (2,2)  ORTH(C1,C2,C3)
+       ne garde que les composantes orthogonales au plan C1C2C3 
+      (pour obtenir des pi par exemple)
+
+       O_C1C2 C1 1S(2) 2P(1) : C2 1S(2) 2P(1) (2,2)  ORTH(C1,C2)
+       ne garde que les composantes orthogonales a l'axe C1C2 
+      (pour obtenir des pi par exemple)
+
+
+       Remarque : en phase de test : verifier les resultats, surtout dans
+       le dernier cas. Problemes quand il y a beaucoup de symetrie
+
+=================================================================================
+
+*************************
+REGROUPEMENTS DE LIAISONS
+*************************
+Permet de creer apres &ORB, une serie de laiasons a partir d'un ligne de donnees
+
+     necessite la donnee de la symetrie dans la nameliste &orb
+
+     &orb sym='x xy'  /
+     (ce sont les donnees "SYMMETRY" de seward)
+
+     a) sigma_ C* 1s(2) 2p(1) : H* 1s(1) dmax=1.6 angstrom
+
+        genere toutes les liaisons entre atomes commencant par C et
+        atomes commecant par H (le reste des noms etant des chiffres)
+        pour lesquelles la distance est < dmax
+        de meme pour des atomes identiques
+        sigma_ C* 1s(2) 2p(1) : C* 1s(2) 2p(1) dmax=1.6 angstrom
+
+        genere les donnees :
+        O_SIG.C1H13 C1 1S(2) 2P(1) : H13 1S(1) (2,2)
+        ...
+
+     b) variante :
+        SIGMA_PARA C* 1S(2) 2P(1) : C* 1S(2) 2P(1) DMAX=1.6 ANGSTROM
+        genere :
+        O_SIG.C1C1 C1 1S(2) 2P(1) (1,1)  PARA(0,C1)
+        O_SIG.C1C2 C1 1S(2) 2P(1) : C2 1S(2) 2P(1) (2,2)  PARA(C1,C2)
+
+     c) PI_ C* 1S(2) 2P(1) : C* 1S(2) 2P(1) DMAX=1.4 ANGSTROM
+        genere :
+        O_PI.C1C1 C1 1S(2) 2P(1) (1,1)
+        O_PI.C2C3 C2 1S(2) 2P(1) : C3 1S(2) 2P(1) (2,2)
+
+     d) variante :
+        PI_ORTH C* 1S(2) 2P(1) : C* 1S(2) 2P(1) DMAX=1.4 ANGSTROM
+        genere :
+        O_PI.C1C1 C1 1S(2) 2P(1) (1,1)  ORTH(0,C1,H13)
+        O_PI.C2C3 C2 1S(2) 2P(1) : C3 1S(2) 2P(1) (2,2)  ORTH(C2,C3,H12)
+        ...
+        ou H12 est un atome voisin de C2C3
+
+     e) CORE_ C* 1S(1)
+        genere :
+        C_COR.C1 C1 1S(1) (2,0)
+        C_COR.C2 C2 1S(1) (2,0)
+        C_COR.C3 C3 1S(1) (2,0)
+        ...
+
+     f) LONEP_ natom=3,atom=N9,n8,c10,bas=3*'1s(1) 2p(1)',cond='para(c12,c5,d12)'
+        genere un doublet et ses deux liaisons adjacentes, avec les donnees
+        proj et ref associees. Attention, un seul double est genere ! (v. plus
+        bas)
+        - natom : nombre d'atomes concernes (celui du doublet, plus les voisins,
+                  don 4 pour NH3)
+        - atom= : label des atomes (si les 2 atomes lies a celui du doublet
+                  sont symetriques l'un de l'autre, et portent donc le meme
+                  nom, les donner tous les deux noms). 
+                  exemple :
+
+                  H1
+                   \     
+                    O :
+                   /
+                  H1
+                      LONEP_ natom=3,atom=O,H1,H1
+        - bas='...' bases des atomes correspondants
+        - cond='para(c12,c5,d12)' condition supplementaire (facultatif) 
+          s'ajoute en fin de toutes les lignes generees
+
+     g) variante LONEPPARA_ natom=3,atom=n2,c3,c3,bas='1s(1) 2p(1)',lpdir='ru'
+        ajoute des donnees "PARA" en fin de ligne. Il faut un atome 
+        supplementaire (ici 'Ru')  pour definir la direction du doublet
+        ici, PAS de donnee COND='...'
+ 
+     h) MULT_ atom=c10,c11,c12,n8,c3,c4,c5,d4,d3,d12,d11,d10,bas=12*'1s(1) 2p(1)'
+        donnee d'une serie de liaisons simples c10-c11, c11-c12 etc...
+        comme pour LONEP_, on peut ajouter COND='...'
+
+     i) variante MULTPARA_
+        comme MULT_. 
+        ici, PAS de donnee COND='...'
+
+     j) Labels.
+        Par defaut, les labels commencent tous par O_, sauf pour CORE_ (C_)
+        Si on veut changer des labels, on ajout la donnee
+        label='atom:l','atom2:l2',...
+        ou:
+        l=a,g,c...
+        atom=-   changer tous les labels en l
+        atom=AT  pour CORE_ changer le label de l'atome AT
+                 pour LONEP_ AT doit correspondre au doublet
+        atom=AT1-AT2  pour la liaison AT1-AT2, changer le label en l
+        ex : label='C1-C1:g','c2-c3:a'
+        
+
+
+
+       Remarques : 
+       1.  l'occupation (2,2) est calculee en fonction de la symetrie
+       du probleme
+       2.  c'est en phase de test
+       3.  on peut considerer cette possibilite comme un point de depart.
+           recuperer les donnees non contractees qui apparaissent sur la
+           sortie, et les modifier au besoin (faire des corrections,
+           remplacer o_ par a_, g_, etc...)
+      
+
+
+DONNEES DE SCHMUDORT :
+En general, elles se limitent a
+ &ort /
+ (voir plus bas la correction eventuelle des numeros des actives)
+
+
+
+DEFINITION DES ORBITALES ACTIVES
+1. Les orbitales sont definies dans les labels des donnees &oao
+   Les orbitales actives ont pour label "A_...." (au lieu de "O_...." par ex)
+   A la fin de schmudorb, est cree un fichier NONORLOC contenant les orbitales
+   non orthogonales, leus occupations, et leurs labels. Les labels commencants
+   par "A_" definissent les actives pour la suite du calcul.
+   Cette information est transmise a schmudort, puis a locnats
+   (elle sert entre autres a definir les priorites d'orthogonalisation)
+   Pour locnats en particulier, elle est tres importante.
+   Pour ces 2 programmes, pas de donnees a preciser pour les actives,
+   elles sont transmises.
+
+2. Il faut, dans casdi, faire un CAS correspondant a ces actives. 
+   Malheureusement, elles ont un autre numero. Apres schmudort, il faut
+   donc faire "cp LOCORB INPORB", puis un motra et un molcost, 
+   et regarder la sortie de molcost pour avoir les numeros des 
+   orbitales a declarer actives dans casdi. On peut aussi utiliser le programme 
+   noscf, qui genere toutes ces donnees automatiquement (voir mode
+   d'emploi de noscf).
+
+3. Remarque
+   Il peut arriver que, parce qu'on genere plusieurs orbitales a la fois
+   (la donnee "(2 1)" genere 2 occupees et une anti-liante) on en veuille
+   que certaines actives. Si on donne le label "A_....", elle seront TOUTES
+   actives. Il faut alors les redefinir. Le methode est la suivante :
+   - faire un schmudort avec le label "A_...."
+   - reperer dans la sortie les orbitales a definir actives (leurs numeros)
+   - refaire passer schmudort, avec 
+     &OAO noac=numeros des actives dans les orbitales qui apparaissent a la 
+     fin du calcul
+     Attention, le label doit etre A_....
+
+NIVEAU DE FERMI
+
+Il est calcule a partir de l'occupation des orbitales du fichier orb
+(orbitales scf en general). Les orbitales d'occupation superieures a 1.
+sont considerees "occupees".
+Cette methode peut etre mise en defaut (creant une erreur a la fin de 
+schmudorb).
+Pour y remedier, on peut donner le niveau de Fermi a la main dans la 
+namelist &orb :
+ &orb fermi0=...   /
+
+
+REMARQUES :
+1. le nombre de liaisons (L + A-L) DOIT etre egal au nombre d'OA qui 
+apparaissent dans les donnees. Sinon, le progr signale une erreur a la fin.
+
+2. On peut simplifier les donnees comme dans oao, sauf en ce qui concerne 
+   l'utilisation de l"*" 
+   (C* ...  est ignore)
+
+3. (dans oao et ort) toutes les donnees sont transformees en majuscules
+
+
+
+
+
+EXEMPLE DE DONNEES POUR UN CALCUL EN ORBITALES LOCALES
+FABRICATION DES DONNEES PAS A PAS
+
+
+
+MOLECULE ETUDIEE :
+La geometrie a pour donnees seward :
+
+ &SEWARD  &END
+Title
+cu2 OH2 por Mitchell et Bernard
+Symmetry
+xy yz
+Basis set
+Cu.ECP.Barandiaran.9s6p6d.2s2p2d.17e-CG-AIMP
+Cu1         0.000000         0.000000        1.499885    Angstrom
+End of basis
+Basis set
+C.ANO-L...2s1p.
+ C1         0.585570         0.412890       -4.223275    Angstrom
+ C3         2.185730        -1.082860       -3.005535    Angstrom
+ C5         2.299940         1.311480       -2.825985    Angstrom
+End of basis
+Basis set
+O.ANO-L...2s1p.
+ O2         1.170290         0.000000        0.000000    Angstrom
+End of basis
+Basis set
+N.ANO-L...2s1p.
+ N1         1.386250         0.141940       -2.975525    Angstrom
+End of basis
+Basis set
+H.ANO-L...1s.
+ H1         0.273150         1.441600       -4.257905    Angstrom
+ H2         1.212110         0.203300       -5.078705    Angstrom
+ H3         1.536480        -1.940610       -3.026705    Angstrom
+ H4         2.833950        -1.071960       -3.860325    Angstrom
+ H5         1.741340         2.199360       -3.001055    Angstrom
+ H6         2.765660        -1.164370       -2.090475    Angstrom
+ H7         3.124180         1.238290       -3.501225    Angstrom
+ H8         2.714450         1.330700       -1.821155    Angstrom
+ H9         2.070290         0.000000        0.000000    Angstrom
+End of basis
+End of input                                                                    
+
+
+
+ce qui veut dire que le groupe de symetrie est D2, et on a
+- 2 atomes CU1
+- 2 atomes O2
+- 2 atomes H9
+- Les autres atomes (C3, C5, H1_8, N1) apparaissent 4 fois
+
+- Pour dessiner la molecule, remarquer que :
+
+CU est lie a O2
+CU est lie a N1
+O2 est lie a H9
+N1 est lie a C1 C2 C3
+C1 est lie a H1 H2
+C2 est lie a H3 H4 H6
+C3 est lie a H5 H7 H8
+on a aussi une liaison C1-C1
+
+Les donnees SCF sont :
+ &SCF &END
+Title
+cu2 OH2 mitchell
+Occupied
+24 23 23 22
+Occnumbers
+24*2
+22*2 1
+23*2
+21*2 1
+End of input                                                                    
+
+
+------------------------------------------------------------------
+PROGRAMMES SCHMUD
+-----------------------------------------------------------------
+
+Il y a 2 programmes schmud a executer l'un apres l'autre
+
+schmudorb < in
+schmudort < in
+
+ou in est le fichier de donnees
+
+- schmudorb :  1) construit une base d'orbitales atomiques orthogonales
+                  (OAO)
+               2) construit des orbitales de liaison
+
+- parmi ces orbitales de liaison, on doit choisir les actives
+
+- schmudort :  orthogonalise et reordonne les orbitales, en fonction des
+               actives choisies 
+
+
+--------------------
+DONNEES DE SCHMUDORB
+--------------------
+
+1)
+ &smufil prefix='mitchell.',progr='MOLCAS'  /
+ &smu nprint=1,orb='mitchell.ScfOrb'  /                                         
+
+progr='MOLCAS' signifie qu'on par de molcas. On peut aussi partir de
+Dalton
+
+
+2)
+ &oao  /
+ CU1 2p0(1) pr=1
+ CU1 2p1-(1) pr=1
+ CU1 2p1+(1) pr=1
+ CU1 3d0(1) pr=2
+ CU1 3d1+(1) pr=2
+ CU1 3d1-(1) pr=2
+ CU1 3d2+(1) pr=2
+ CU1 3d2-(1) pr=2
+ O2 1s(1) pr=1
+ O2 1s(2) pr=2
+ O2 2px(1) pr=2
+ O2 2py(1) pr=2
+ O2 2pz(1) pr=2
+ C* 1s(1) pr=1
+ C* 1s(2) pr=2
+ C* 2px(1) pr=2
+ C* 2py(1) pr=2
+ C* 2pz(1) pr=2
+ N* 1s(1) pr=1
+ N* 1s(2) pr=2
+ N* 2px(1) pr=2
+ N* 2py(1) pr=2
+ N* 2pz(1) pr=2
+ H* 1s0(1) pr=2
+fin                                                                             
+
+Ces donnees concernent l'orthogonalisation des OA entre elles. C'est une
+orthogonalisation hierarchisee, obtenue par une suite de projections
+(Schmidt) et d'orthogonalisations S**-1/2
+On donne par exemple :
+
+CU1 2p0(1) pr=1
+
+ce qui veut dire que la premiere orbitale 2p0 (donc la moins diffuse) est
+orthogonalisee en 1er (priorite 1, pr=1)
+C'est un orbitale de coeur, qu'on veut modifier le moins possible.
+De meme
+
+C* 1s(1) pr=1
+
+signifie que toutes les 1s de coeur de tous les C (C* = C1,C2,C3) sont en
+priorite 1
+
+N* 1s(2) pr=2 : la 2eme orbitale S est en priorite 2, etc...
+
+REMARQUES :
+- On peut mettre autant de priorites differentes qu'on veut
+- Les orbitales absentes des donnees sont de priorite (prio max +1)
+- Il y a les equivalences suivantes 1s = 1s0 ; 2p0 2p1+ 2p1- = 2px 2py 2pz
+(attention pour molcas, la correspondance 2p1+=2px ou 2p1+=2py selon les
+groupes de symetrie)
+- les donnees peuvent etre en majuscules ou en minuscules
+
+
+3)
+ &orb  /
+o_o2 O2 1s(2) 2px(1) 2py(1) 2pz(1) : H9 1s(1) (8 2)
+c_cu1 CU1 2px(1) 2py(1) 2pz(1) (6 0)
+c_o2 O2 1s(1) (2 0)
+c_c1 c1 1s(1) (4 0)
+c_c3 c3 1s(1) (4 0)
+c_c5 c5 1s(1) (4 0)
+c_N1 1s(1) (4 0)
+a_cu1 CU1 3d0(1) 3d1+(1) 3d1-(1) 3d2+(1) 3d2-(1) (10 0)
+o_C1 C1 1s(2)  2px(1) 2py(1) 2pz(1) (2 2) ref 1
+o_N1 N1 1s(2) 2px(1) 2py(1) 2pz(1)  (4 0)
+o_N1 N1 1s(2) 2px(1) 2py(1) 2pz(1) : C3 1s(2) 2px(1) 2py(1) 2pz(1) (4 4)
+o_N1 N1 1s(2) 2px(1) 2py(1) 2pz(1) : C5 1s(2) 2px(1) 2py(1) 2pz(1) (4 4)
+o_N1 N1 1s(2) 2px(1) 2py(1) 2pz(1) : C1 1s(2) 2px(1) 2py(1) 2pz(1) (6 6) proj 1
+o_C1 C1 1s(2) 2px(1) 2py(1) 2pz(1) : H1 1s(1) (6 6) proj 1
+o_C1 C1 1s(2) 2px(1) 2py(1) 2pz(1) : H2 1s(1) (6 6) proj 1
+o_C3 C3 1s(2) 2px(1) 2py(1) 2pz(1) : H3 1s(1) (4 4)
+o_C3 C3 1s(2) 2px(1) 2py(1) 2pz(1) : H4 1s(1) (4 4)
+o_C3 C3 1s(2) 2px(1) 2py(1) 2pz(1) : H6 1s(1) (4 4)
+o_C5 C5 1s(2) 2px(1) 2py(1) 2pz(1) : H5 1s(1) (4 4)
+o_C5 C5 1s(2) 2px(1) 2py(1) 2pz(1) : H7 1s(1) (4 4)
+o_C5 C5 1s(2) 2px(1) 2py(1) 2pz(1) : H8 1s(1) (4 4)
+ fin                                                                            
+
+On va detailler maintenant ces donnees, qui sont plus complexes
+
+Chaque ligne correspond a une "liaison". Le mot "liaison" a ici une
+signification plus large que celle qu'on lui donne en general. "liaison"
+signifie ici : 
+Toute orbitale de fragment fabriquee a partir des OA du fragment.
+
+Par exemple, la donnee
+
+o_o2 O2 1s(2) 2px(1) 2py(1) 2pz(1) : H9 1s(1) (8 2)
+
+signifie
+- on considere le fragment O2-H9
+- dans ce fragment, on considere les orbitales :
+  - pour O2  1s(2) 2px(1) 2py(1) 2pz(1) ; pour H9  1s(1)
+(ce sont les orbitales de valence)
+
+ON VA MAINTENANT REGARDER TOUTES LES FORMES DE "LIAISONS" POSSIBLES
+
+3A) COEUR
+
+la donnee est du type
+
+c_o2 O2 1s(1) (2 0)
+
+- "c" pour coeur
+- O2 1s(1) : l'OA est la 1ere s ce O2, don l'OA de coeur
+- (2 0) avec ces OAn on cree 2 occupees (car il y a 2 atomes O2), et 0
+virtuelle
+
+Le programme repond :
+
+ donnee    C_o2 O2 1S0(1) (2 0)
+ atome  ====O2  ====                                                            
+...
+ nombre d'orbitales occupees par symetrie      1  1  0  0
+ nombre d'orbitales anti-liantes par symetrie  0  0  0  0                       
+ 
+(il a trouve 2 orbitales occupees, de sym 1 et 2)
+
+
+3B) LIAISON COVALENTE
+
+par exemple, la liaison C5-H5
+
+o_o5 C5 1s(2) 2px(1) 2py(1) 2pz(1) : H5 1s(1) (4 4)
+
+- "o" signifie "orbitale", c'est-a-dire non "coeur"
+- C5 1s(2) 2px(1) 2py(1) 2pz(1) sont les orbitales de valence de C5
+- H5 1s(1) de meme pour H5
+- (4 4) Il y a 4 orbitales occupees (les liaisons des 4 C5H5 de la
+molecule) et 4 anti-liantes fabriquees avec le OA donnees
+
+Le programme repond :
+
+ donnee    O_c5 C5 1S0(2) 2P1-(1) 2P1+(1) 2P0(1) : H5 1S0(1) (4 4)
+ atome  ====C5  ====
+ atome  ====H5  ====                                                            
+
+puis fabrique, symetrie par symetrie, des orbitales de liaison et calcule
+leur occupation. En symetrie 1, il extrait la matrice densite de fragment:
+
+ sym 1  matrice extraite
+ 
+                 1       2       3       4       5
+ 
+   1 C5  1s0    1.0266  0.0564  0.0709  0.0029  0.5118
+   2 C5  2p1+   0.0564  1.0842 -0.1577 -0.0148 -0.4338
+   3 C5  2p1-   0.0709 -0.1577  1.0079 -0.0204  0.6948
+   4 C5  2p0    0.0029 -0.0148 -0.0204  1.2084 -0.1417
+   5 H5  1s0    0.5118 -0.4338  0.6948 -0.1417  0.8361                          
+
+(noter qu'il y a a peu pres 1 electron par OA)
+
+Sa diagonalisation donne les occupations et les orbitales :
+
+ occupations, orbitales naturelles
+           1.9908  1.2100  1.1169  0.8384  0.0071
+ 
+                 1       2       3       4       5
+ 
+   1 C5  1s0    0.3596 -0.0196  0.7332 -0.4467 -0.3650
+   2 C5  2p1+  -0.3788 -0.2227  0.6512  0.5616  0.2597
+   3 C5  2p1-   0.5448  0.0745 -0.0720  0.6933 -0.4602
+   4 C5  2p0   -0.1224  0.9718  0.1695  0.0665  0.0861
+   5 H5  1s0    0.6445  0.0017  0.0667  0.0059  0.7617                          
+
+On a une orbitale occupee a 1.9908. C'est la liaison sigma. Il y a une
+orbitale vide (0.0071). C'est l'antiliante. Les autres (proches de 1.)
+n'ont pas de signification physique. Elles correspondent aux trois
+"demi-liaisons" C-C et C-H avec d'autres centres. Elles seront eliminees.
+Apres etude de toutes les symetries, le programme choisit les 4 orbitales
+les plus occupees, et les 4 plus vides. Il trouve :
+
+ nombre d'orbitales occupees par symetrie      1  1  1  1
+ nombre d'orbitales anti-liantes par symetrie  1  1  1  1                       
+
+
+
+
+3C) Fragment "isole" :
+
+On ne connait pas bien la nature de la liaison O2-CU
+on va supposer qu'on a un OH- "autonome"
+
+Reprenons la donnee :
+
+o_o2 O2 1s(2) 2px(1) 2py(1) 2pz(1) : H9 1s(1) (8 2)
+
+
+
+- en debut de ligne, un "o" signifie que ces donnees ne concernent pas des
+  orbitales de coeur
+- a la fin, le 8 signifie qu'on a 8 occupees (on OH-, donc 8 electrons,
+donc 4 occupees. On a 2 OH donc 8 occupees)
+- a la fin, le 2 signifie que la donnee des OA de valence generera une
+anti-liante (2 sur les 2 OH-)
+
+Schmudorb repond a cette donnee de la facon suivante :
+
+ donnee    O O2 1S0(2) 2P1-(1) 2P1+(1) 2P0(1) : H9 1S0(1) (8 2)
+ atome  ====O2  ====
+ atome  ====H9  ====                                                            
+
+puis fabrique, symetrie par symetrie, des orbitales de liaison et calcule
+leur occupation. Les 8 plus occupees sont retenues, les 2 moins occupees
+sont aussi retenues parmi les antiliantes. A la fin, on a :
+
+ nombre d'orbitales occupees par symetrie      2  2  2  2
+ nombre d'orbitales anti-liantes par symetrie  1  1  0  0                       
+
+Les occupations, par symetrie, etaient :
+1           1.9970  1.9524  0.0047 
+2           1.9974  1.8691  0.0040 
+3           1.9950  1.9284 
+4           1.9878  1.7254  
+
+On retenu 8 occupees, et 2 anti-liantes. Leurs occupations sont claires.
+Notre hypothese d'un OH- "autonome" ou "isole" etait corrcte. L'orbitale
+occupee par 1.7254 electron est une 2pz. Les electrons se sont
+partiellement delocalises dans le CU.
+
+
+3C') Autre exemple de systeme isole :
+Supposons :
+On n'a pas non plus une idee claire de la liaison CU-N1
+
+On va supposer que N garde son doublet, et on donne :
+
+O_n1 N1 1S0(2) 2P1-(1) 2P1+(1) 2P0(1) (4 0)
+
+Le programme repond :
+1           1.8882  1.1653  1.1622  1.1126
+2           1.6941  1.2007  1.1544  1.1435
+3           1.8967  1.1648  1.1617  1.1121
+4           1.7382  1.2033  1.1542  1.1465
+
+ nombre d'orbitales occupees par symetrie      1  1  1  1
+ nombre d'orbitales anti-liantes par symetrie  0  0  0  0                       
+
+L'hypothese n'etait pas absurde
+- on a 4 occupees 
+- on n'a clairement aucune anti-liante
+- on a 12 "demi-liaisons" (N-C) a rejeter
+
+Remarque : c'est donc une solution qui marche, qui convient pour un point
+de depart, mais on pourrait en essayer d'autre, par exemple entre des
+entites N-C, etc...
+
+
+
+3D) PROBLEMES LIES A LA SYMETRIE
+
+
+
+3DA) Pour entrer la liaison C1-C1, on donne :
+
+O_c1c1 C1 1S0(2) 2P1-(1) 2P1+(1) 2P0(1) (2 2)
+
+Il n'y a pas de difficulte particuliere
+
+
+
+3DB) Mais si on entre la liaison C1-H1:
+donnee : O_c1h1 C1 1S0(2) 2P1-(1) 2P1+(1) 2P0(1) : H1 1S0(1) (4 4)
+(4 liaisons, 1 occupee et une anti-liante par liaison) on obtient les
+occupations de fragment :
+
+sym 1           1.9904  1.9823  1.2230  0.8455  0.0080
+sym 2           1.9923  1.1948  0.7563  0.0176  0.0052
+sym 3           1.9905  1.9822  1.2244  0.8458  0.0080
+sym 4           1.9924  1.1951  0.7579  0.0180  0.0053
+
+On a clairement 6 occupees et 6 anti-liantes !
+C'est que, en donnant le centre C1, on genere automatiquement la liaison
+C1-C1. Il faut donc donner
+
+O_c1 C1 1S0(2) 2P1-(1) 2P1+(1) 2P0(1) : H1 1S0(1) (6 6)
+
+et regenerer C1-C1
+
+puis on va eliminer, par projection, C1-C1 de H1-C1-C1-H1
+
+pour cela, les donnees  de C1-C1 et H1-C1-C1-H1 sont 
+
+O C1 1S0(2) 2P1-(1) 2P1+(1) 2P0(1) (2 2) ref 1
+O C1 1S0(2) 2P1-(1) 2P1+(1) 2P0(1) : H1 1S0(1) (6 6) proj 1
+
+On aura de meme pour N1-C1-C1-N1
+ O N1 1S0(2) 2P1-(1) 2P1+(1) 2P0(1) : C1 1S0(2) 2P1-(1) 2P1+(1) 2P0(1) & 
+(6 6) PROJ 1 
+("&" pour ligne suite)
+
+REMARQUE : 
+- l'ordre pour donner ref et proj est sans importance
+- si on doit projeter sur 2 liaisons, on donne :
+................... ref 1
+....................... ref 2
+..............................proj 1,2
+
+- si une orbitale est a la fois proj et ref, on entre :
+................... ref 1 ; proj 2
+
+
+
+4) TESTS DE BON FONCTIONNEMENT
+
+Il faut avoir entre autant d'OA que d'orbitales de liaison dans chaque
+symetrie. Si ce n'es pas le cas, le programme signale "ERREUR". 
+
+
+
+
+5) ORBITALES FINALES
+
+
+A la fin du calcul, on obtient des orbitales de liaison (ou de fragments)
+exprimees dans la base des OAO, et non orthogonalisees. Les orbitales de
+coeur sont en tete. Il faut maintenant choisir les actives, selon le
+probleme physique considere. C'est la qu'il faut "regarder" les orbitales.
+Quand on a trouve les actives, on peut : 
+
+
+noter leurs numeros (ecrits au-dessus des
+orbitales), et faire tourner schmudort en lui donnant ces numeros. 
+
+ou mieux, rfaire tourner schmudorb, en remplcant o_ par a_ en debut de ligne
+pour les orbitales considerees
+
+
+--------------------
+DONNEES DE SCHMUDORT
+--------------------
+
+ &ort numac=53,132 /                                                            
+
+ou 53,132 sont les 2 actives trouvees dans l'examen de la sortie de
+schmudorb.
+
+
+
+On a maintenant, dans le fichier LOCORB, un jeu d'orbitales de fragment
+orthogonalisees, exprimees dans la base des OA. On peut faire une IC dans
+la base de ces orbitales
+
+
+
+

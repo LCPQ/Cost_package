@@ -1,0 +1,20 @@
+                 NATURALT
+
+Donnees :
+
+ &natfil prefix='...'      /
+ &mixdat
+ nsym= nombre de calculs casdet/casdi en parallele (M caluls, M fichiers
+       cdin)
+ netat=m,n,p,...  nombre de val/vect propres par calcul
+             (nsym valeurs donnees, pour N=m+n+p+... val/vect propres)
+ metat=        numeros des racines dans chaque calcul
+               (m+n+p+... valeurs)
+ coef= m+n+p+... valeurs : coefficients relatifs de chaque val/vect propre
+ ymolcas=t,
+ ngel= donnees "FROZEN" de molcost
+ ndel= donnees "DELETE" de molcost
+ yw... donnees pour l'impression
+ seuil=  (seuil de convergence. (= recouvrement max des orbitales)
+ defaut=1.d-4). Si la convergences est atteinte, un fichier est cree
+

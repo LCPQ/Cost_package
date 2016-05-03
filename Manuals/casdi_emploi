@@ -1,0 +1,313 @@
+
+
+
+                 XXXX     XX      XXXXX   XXXXX     XXXXX
+                X    X     X     X     X   X   X      X
+               X           X     X         X    X     X
+               X          X X    X         X    X     X
+               X          X X     XXXXX    X    X     X
+               X         X   X         X   X    X     X
+               X         XXXXX         X   X    X     X
+                X    X   X   X   X     X   X   X      X
+                 XXXX   XXX XXX   XXXXX   XXXXX     XXXXX
+
+
+************
+MRCI Program
+************
+
+--------------
+I INPUT/OUTPUT
+--------------
+
+INPUT FILES:
+
+"prefix"Info: created by molcost (ASCII file)
+"prefix"Mono: created by molcost (binary file)
+"prefix"det: contains determinants (binary file created by casdet)
+"prefix"cdi: contains info from casdet (ASCII file created by casdet)
+"prefix"ijcl: integral file (binary file created by molcost)
+Facultative:
+"prefix"ess: input vector used with nessai=2 (identical to "prefix"davec)
+
+
+
+OUTPUT FILES:
+"prefix"davec: contains eigenvector (binary file)
+"prefix"dens: contains density matrix (binary file)
+
+
+INPUT DATA:
+2 namelists:
+1)
+ &cdifil
+ prefix=                       name of the project, with a point (.) at the end
+                               ex: Project=PROJ in molcas
+                               --> prefix='PROJ.' in casdet
+                               this data MUST be given
+ Facultative data: 
+ ymatonly            F         T : lit la matrice sur disque et la diagonalise,
+                               sans avoir besoin d'autre donnee ou 
+                               fichier supplementaires
+ 
+
+
+ input and output files have by default the names:
+ "prefix"Info, "prefix"Mono, "prefix"det
+ info='III'                    Info file's name is "prefix"III
+ Mono='MMM'                    Mono file's name is "prefix"MMM
+ det='DDD'                     det file's name is "prefix"DDD
+ ess='EEE'                     ess file's name is "prefix"EEE
+ dens='ddd'                    dens file's name is "prefix"ddd
+ info1='III'                   Info file's name is III
+ info1='MMM'                   Mono file's name is MMM
+ info1='DDD'                   Det file's name is DDD
+ ess1='EEE'                    ess file's name is EEE
+ dens1='ddd'                   dens file's name is ddd
+ /
+
+
+2)
+ &dav
+      La namelist &dav contient un tres grand nombre de donnees
+      Cependant, toutes les donnees sont facultatives
+      D'autre part, seul un peiti nombre est a connaitre absolument
+
+      Donnees "tres utiles"
+
+
+nvec=                1     nb of eigenvalues
+ihab=                0     1 SC2 calculation (see SC2 part)
+                           2 SC2 calculation for excited states (see SC2 part)
+ihab=                1     if ihab>0: 1 ou 2   calcul SC2  (see SC2 part)
+iprec=               6     precision : seuil d'arret a 10**(-iprec)
+niter=                     nombre d'iterations (defaut 50)
+nessai=              0     0: No trial vector
+                           1: give trial vectors manually (see trial vect part)
+                           2: reads vect from preceeding calculation
+twvec=            0.03     seuil d'ecriture des coefficients des vecteurs
+                           propres sur la sortie
+twess=                     seuil d'ecriture des coefficients des vecteurs
+                           propres dans le fichier ESSOUT (en clair)
+syspin=                    '0' (defaut)  pour avoir tous les vecteurs propres
+                           '+' pour avoir les vecteurs symetriques par
+                           retournement des spins (singulets, quintuplets...)
+                           '-' pour avoir les vecteurs antisymetriques par 
+                           retournement des spins (triplets...)
+                           Attention, si ms2 est different de 0, syspin='0'
+ydens=               1     1: calcul et ecriture sur file de la matrice densite
+ywcas=               F     T ecriture en sortie de tous les determinants du
+                           CAS. Creation d'un fichier ESCASOUT 
+                           (en clair, comme ESSOUT)
+twcas=            0.03     seuil d'ecriture en sortie des determinants du CAS. 
+
+
+      Autres donnees :
+
+maxda2                     nombre max de vecteurs gardes sur file
+calcul= 'M', 'D' ou 'MD'
+- calcul= 'M' : calcule seulement la matrice et la stocke sur
+                file a la maniere Moyen ou Inidet (reels en
+                simple precision)
+- calcul= 'D' : diagonalise la matrice calculee par un passage
+                calcul= 'M' ou toute autre matrice ecrite de
+                la meme facon
+- calcul= 'MD' : diagonalisation directe  (defaut)
+stop= 'FIN', 'DEL', 'ORDET', 'ITERNAT'
+- stop='FIN' : (par defaut) le calcul va jusqu'a la fin
+- stop='DEL' : le calcul va jusqu'a la fin, et n'efface pas les fichiers
+               temporaires. Pour faire un restart
+- stop='ITERNAT' : le calcul va jusqu'a la fin, et n'efface pas certains
+               fichiers temporaires. Pour les calculs iternat. Voir
+               le mode d'emploi de ITERNAT
+- stop='ORDET' : s'arrete apres avoir reordonnee les determinants en
+               fonction de leur adresse et avoir cree le fichier
+               correspondant ORDET.
+restart= 'INT', 'DET', 'INTDET'  ( apres un calcul stop='del' ou
+               eventuellment un calcul mal fini)
+- restart= 'INT'. On ne reordonne pas les integrales, parce que
+               ce sont les memes pour 2 calculs (ex. meme geometrie,
+               2 symetries differentes)
+- restart= 'DET'. On ne recalcule pas les listes de determinants. (CAS
+               de 2 calculs avec meme espace IC, mais 2 geometries
+               differentes par exemple)
+- restart= 'INTDET'. Tout est conserve. Les 2 calculs sont identiques.
+              (ex. le 1er n'a pas converge, ou on a oublie de demander
+              un habillage ...)
+- irest=1 : equivalent a restart= 'INTDET'   (defaut 0)
+- sint :    seuil en dessous duquel une integrale moleculaire est consideree
+              comme nulle (defaut 0.d0)
+- ydens :   T ecriture de la matrice densite dans un fichier prefixdens
+                  (defaut T)
+
+ / 
+
+
+
+-------------------------
+II additional information
+-------------------------
+
+
+            
+1.   VECTEURS D'ESSAI
+
+    &dav
+
+    nessai= 0, 1, 2      (defaut 0)
+    - 0    les vecteurs d'essai ont la forme suivante :
+
+              1.  0.  0.  0.
+              0.  0.  0.  0.
+              0.  1.  0.  0.
+              0.  0.  0.  1.
+              0.  0.  0.  0.
+              0.  0.  0.  0.
+              0.  0.  1.  0.
+              0.  0.  0.  0.
+              ........
+     ou les "1" sont places sur les determinants dont les valeurs
+     diagonales sont les plus basses. Si on utilise la symetrie de spin
+     (donnee syspin), ces orbitales sont symetrisees, ce qui peut donner
+     un meilleur point de depart. 
+     c'est un peu primaire, mais ca marche en general assez bien
+
+     On peut rajouter la donnee :
+     lvec= les numeros de vecteurs lus sur un fichier PREFIX.ess issu
+     d'un calcul precedent. Le fichier PREFIX.ess est le fichier binaire
+     resultat d'un calcul casdi precedent. On fai simplement :
+     cp PREFIX.davec PREFIX.ess
+
+     par exemple
+     a) 1er calcul nessai=0, nvec=2
+     b) On s'apercoit qu'on a besoin en fait de 5 vecteurs
+        cp PREFIX.davec PREFIX.ess
+     c) 2eme calcul casdi nessai=0,lvec=1,2,nvec=5
+        les vecteurs d'essai utilises par casdi sont alors :
+        - les 2 vecteurs du calcul precedent
+        - des vecteurs avec des "1" sur les plus basses valeurs diagonales
+          pour les 3 autres vecteurs,
+          comme pour un calcul nessai=0 standard
+     (utile quand on s'apercoit qu'on na pas demande assez de vecteurs). 
+
+     - 1   les vecteurs d'essai sont donnes "en clair" :
+
+
+1)         en namelist sous la forme :
+           &ess it=...  ic=...  ip=...  v=...   /
+           &ess it=...  ic=...  ip=...  v=...   /
+           &ess it=...  ic=...  ip=...  v=...   /
+           &ess it=...  ic=...  ip=...  v=...   /
+           &ess it=...  ic=...  ip=...  v=...   /
+           ...................
+           a raison d'une namelist par coefficient du vecteur pour
+           les coefficients importants
+
+           it : trous   it=3 : trou alpha en 3
+                        it=2,-4 : trou alpha en 2 et beta en 4
+           ip : particules  meme principe
+           ic : CAS donne en OCCUPATION  ic=2,-2,4 : 2 electrons
+                alpha en 2 et 4, un beta en 2
+           v :  cofficients (estimes) du (des) vecteur(s) propre(s)
+
+           Un fichier contenant des vecteurs d'essai donnes sous cette
+           forme est genere au cours de chaque calcul. Son nom est ESSOUT.
+           Il suffit de le coller a la fin des donnees. Le premier calcul
+           peut etre par exemple un CAS_CI (gener='CAS' dans la namelist
+           cd de CASDET. Si ywcas=T, on genere aussi un fichier ESCASOUT,
+           qui contient tout les determinants du CAS
+
+2)         par le nom d'un fichier contenant les donnees &ess
+           c'est commode si on veut utiliser un calcul precedent
+           exemple :     calcul CASCI avec  ywcas=T
+                           --> produit un fichier en clair "ESCASOUT"
+                         calcul CAS+SD avec nessai=1 et
+                         &ess file='ESCASOUT'  /     
+      
+
+     - 2  les vecteurs d'essai sont lus a partir d'un calcul
+          precedent sur le fichier PREFIX.ess
+          cd fichier PREFIX.ess a la meme structure que le fichier
+          PREFIX.davec correspondant a la sortie d'un calcul precedent
+
+
+
+VI  CALCULS SC2
+
+
+    Les donnees sont dans la namelis &dav de casdi
+
+    La donnee qui gouverne les calculs SC2 est ihab
+
+    ihab = 0    diagonalisation simple
+
+    ihab = 1    calcul SC2
+                - si l'habillage se fait par rapport a l'etat fondamental
+                  et que celui-ci est couches fermees, pas d'autre donnee
+                - dans le cas contraire, on doit remarquer que lhabillage
+                  se fait par rapport :
+                  * a un etat (on utilise ses coefficients)
+                  * a un determinant (dominant en general dans cet etat)
+
+                - le determinant dominant est defini par la namelist deth
+                   &deth ith=...   ,iph=...    /
+                  ou ith et iph sont les trous et particules du
+                  determinant de reference par rapport a la REFERENCE
+                  COUCHES FERMEES occupee jusqu'au niveau de Fermi
+
+                  exemple d'un systeme a 10 electrons, ou les orbitales
+                  5 et 6 sont actives
+                  le determinant donne dans ess par
+                   &ess it=-2,3,ic=5,-6,ip=10,-12  /
+                  sera ecrit
+                   &deth ith=-2,3,-5,iph=-6,10,-12  /
+                  pour un nombre impair d'electrons, on ecrit un particule en
+                  moins
+                   &deth ith=-2,3,-5,iph=-6,-10,  /
+                  de facon a avoir plus de spins beta que alpha
+
+                - l'etat de reference est CHOISI par le programme parmi
+                  les ihvec etats les plus bas : c'est celui pour lequel
+                  le determinant donne dans deth a le plus grand coefficient
+                  ihvec = 1 par defaut. Il arrive que, au cours des
+                  iterations d'habillage, l'etat de reference "descende"
+                  au-dessous de ceux qui le precedaient. Il restera ainsi
+                  le vecteur "habilleur"
+
+    maxith      nombre maximal d'iterations d'habillage. (defaut 10)
+
+    sh          seuil d'arret du processus SC2. Si le coefficient du
+                determinant de reference est inferieur a sh, le
+                programme s'arrete (defaut 0.5)
+
+    ihab = 2    calcul SC2 par rapport a une autre reference
+                ce calcul suit necessairement un calcul ihab=1, et se sert
+                du fichier PREFIX.sc2ex
+                Il permet d'obtenir les autres racines excitees de la
+                Matrice SC2 obtenue avec ihab=1
+                ATTENTION : par rapport au calcul ihab=1, seule la
+                symetrie de la fonction d'onde peut changer. En particulier,
+                ni le nombre d'electrons, ni l'espace actifs ne peuvent
+                etre modifies.
+     yfpspi : attention, peu teste !
+             pour un calcul SC2, oblige le vecteur a rester fonction
+             propre de spin (ce que n'assure pas SC2)
+     yhmono : habillage par rapport aux monoexcites
+    
+
+ Autres donnees concernant l'habillage
+    
+
+
+    hab= 'SC2', 'ACPF', 'AQCC'   (si ihab=1)
+         (defaut='SC2') fait un calcul ACPF ou AQCC au lieu de SC2
+    ipresc=  precision pour l'habillage (10**(-iprec))
+    ihprec=  dans un calcul SC2 : abaissement de la precision de diagonalisation
+             pour les premieres iterations d'habillage (car on
+             peut converger la diagonalisation de facon approximative
+             quand on n'a pas encore habille)
+             (defaut : 3 soit un abaissement de precision de 10**(-3))
+             mettre ihprec=0 si on veut connaitre le resultat du calcul
+             SDCI
+     ihvec : nombre de vecteurs parmi lesquels on choisit le vecteur
+             d'habillage.  (defaut 1)

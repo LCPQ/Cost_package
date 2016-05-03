@@ -1,0 +1,39 @@
+
+******************************************************************************
+ijkl : Programme de transformations d'integrales
+
+******************************************************************************
+
+        En entree : 
+        - file d'integrales monoelectroniques atomiques   prefixAO_ONE
+        - file d'integrales bielectroniques atomiques     prefixAO_TWO
+        - file d'orbitales (INPORB)
+
+
+
+Donnees :
+           Donnee (maj: correspond a des donnees obligatoires)
+ &ijkl     PREFIX='...'
+           inforef1     file Info en entree                   prefixInfo
+           info1        file Info en sortie                   prefixInfo
+           (iforef1 sera donc remplacee par info1. En fait on ajoute a
+           inforef1 la partie concernant les orbitales moleculaires)
+           mono1        file Mono en sortie                   prefixMono
+
+           inforef,
+           monoref,
+           info,
+           mono       suffixes des 4 files precedentes       Inforef...
+
+           ORB1         file des nouvelles orbitales
+           ORB_SORT     numerotation des OM (indices des integrales   'OV'
+                        moleculaires)
+                        SYM : ordonnes par symetries
+                        OV  : ordonnees Occupees, puis virtuelles
+                        OAV : ordonnees inactives occupees, actives,
+                        inactives virtuelles
+           frozen       nb d'orbitales gelees par symetrie             nsym*0
+           delete       nb d'orbitales virtuelles gelees par symetrie  nsym*0
+           ycl          les integrales sont generees en clair          F
+ 
+ 

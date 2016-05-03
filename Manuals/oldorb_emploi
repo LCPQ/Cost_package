@@ -1,0 +1,17 @@
+
+=============================================================================
+=============================================================================
+
+          oldorb          oldorb          oldorb          oldorb
+
+=============================================================================
+=============================================================================
+
+Transforme les fichiers d'orbitales molcas 6 dans le format des versions
+precedentes
+
+
+En entree : les orbitales molcas 6, sous le nom INPORB
+En sortie : les orbitales anciennes versions, sous le nom OUTORB
+
+pas de donnees

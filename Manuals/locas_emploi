@@ -1,0 +1,70 @@
+locas : obtention d'orbitales optimisees par relocalisation d'orbitales
+        casscf
+
+        variables necessaires : 
+	Il faut avoir exporte les variables : molcas, PATH
+	(instruction: export molcas PATH)
+	
+genere les donnees et appelle les programmes :
+
+rasscf
+rasread
+proj_scf
+schmudort
+
+!     en entree:
+!     liste de donnees (voir plus bas)
+!     un fichier d'orbitales locales non orthogonales de nom "NONORLOC"
+!     un fichier d'orbitales locales orthogonales de nom "INPORB"
+!     - le fichier INPORB va servir pour demarrer le RASSCF
+!     - le fichier NONORLOC sert a la fin pour relocaliser la solution
+!       trouvee par RASSCF
+!     Rem 1 : les orbitales de INPORB son necessairement orthogonales,
+!     mais il n'y a aucune condition pour NONORLOC. Rien n'empeche de
+!     recopier INPORB dans NONORLOC et de donner donc deux fois le meme
+!     fichier.
+!     Rem 2 : en general, INPORB est obtenu a partir de NONORLOC par
+!     orthogonalisation (par schmudort par exemple)
+!     
+!     Les labels des orbitales moleculaires sont indispensables. Ils
+!     determinent les orbitales actives, gelees, etc..., c'est-a-dire
+!     les classes pour l'orthogonalisation schmudort. Il sont lus dans
+!     inporb et doivent donc necessairement y figurer.
+!  
+!     en sortie:
+!     un fichier d'orbitales locales orthogonales INPORB2
+!     
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Donnees:
+  2 types :
+
+  1. une namelist &locas sans aucune donnee obligatoire
+  2. &ras /, puis toutes les donnees pour rasscf, dont seules 3 sont 
+     obligatoires. Elles seront lues sous cette forme par rasscf
+
+ &LOCAS
+ data='AUTO'      'AUTO' lit quelques donnees d'un fichier de schmudorb
+                  les donnees de schmudorb pilotent ainsi une grande partie de 
+                  x  la suite du calcul
+ FERMI=0          par sym, nb d'orb occupees
+                  (lu de schmudorb si data='AUTO')
+ frozen=0         donne par sym
+                  (lu de schmudorb si data='AUTO')
+ delete=0         donne par sym
+                  (lu de schmudorb si data='AUTO')
+ &ras  /
+symmetry
+ .
+spin
+ .
+nactel
+ . . .
+ras1
+ .
+ras2
+ .
+ras3
+ .
+ ...
+				    

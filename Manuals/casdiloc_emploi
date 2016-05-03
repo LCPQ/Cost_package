@@ -1,0 +1,243 @@
+
+
+==========================================================================
+==========================================================================
+
+        CASDILOC        CASDILOC        CASDILOC        CASDILOC
+
+ CI Program for localized orbitals. Long-range interactions between
+ occupied and virtual orbtals are neglected
+
+==========================================================================
+==========================================================================
+
+
+Input files:
+
+   Files created by ijkloc:
+   ~ijcllocinfo, ~ijclloc2, ~ijclloc3, ~ijclloc4
+   ~Monoloc, ~Infoloc (identical to ~Mono and ~Info of molcost)
+   ~LOinfo
+   (where ~ means prefix...)
+   ORB_IJKLOC
+
+   eventually:
+   topo: links between orbitals
+
+
+Data:
+ &locci
+
+Compulsory data:
+   prefix=
+
+Facultative data:
+   noac=            -1      number of active orbitals
+                            if noac=-1, noac,numac are recalculated using
+                            information from preceding programs.
+   numac=         16*0      active orbitals
+   ms2=              0      Sz*2
+   nessai=           0      trial vectors
+                            0: on the lowest value(s) of the diagonal
+                            1: given by the user. give &locess namelist(s)
+                            2: read from previous calculation
+                            3: CAS prediagonalization
+   nvec              1      number of vectors
+   dim_heff         50      maximal size of the effective hamiltonian, i.e. 
+                            which corresponds to the number of Psi and H*Psi
+                            stored on disk. Mustbe larger than twice nvec
+   nprint            0      0,1,2,3 print option
+   ywcas             F      T: writes all coefficients of CAS determinants,
+                            whatever the value of the coefficient
+   niter            50      number of iterations
+   prec            1.d-6    convergence precision
+   calcul         'MD'      'MD' normal. Direct diagonalization
+                            'M' Matrix calculation, stored on mat file
+                            diagonaliser ensuite avec casdi (calcul='D')
+                            il faut alors :
+                              - mettre ygendet=T dans &locci, pour avoir les det
+                              - renommer la matrice MAT en Project.mat
+   gener        'CAS+SD'    CAS+SD, CAS+S, CAS+DDCI, CAS+DDC2, CAS
+                'SEL+SD'    Selected Active Space.
+                            The Active Space is given with individual space
+                            determinants. All spin distributions are
+                            authomatically generated.
+                            possible data: SEL+SD, SEL+S, SEL+DDCI, SEL+DDC2,
+                                           SEL
+                            The determinants are given as follows:
+                            after the &locci data:  &locci ... /
+                            &selec
+                            for each determinant, a list of occupations in I1
+                            format (noac numbers 0, 1 or 2, corresponding to
+                            the occupation of active orbitals, according to
+                            their position in the list of orbitals.
+                            end the Data by a line FIN or END
+                            example:
+                            &locci ... /
+                            &selec /
+                            2200
+                            1111
+                            end
+   syspin           '0'     '0' no spin symmetry
+                            '+' gives singlets, quintets...
+                            '-' gives triplets...
+   is0               0      symmetry of the eigenvectors
+                            does not consider symmetry
+                            n  computes vectors of symmetry n
+   liens           'KIJ'    'KIJ' links obtained from exchange integrals
+                            'FILE' links given in toto ascii file
+                            'ALL' all orbitals linked
+                            'ATOM' see below "liens='ATOM'"
+   sl1                      if liens='KIJ'.
+                            threshold to consider 2 orbitals as bonded
+                            LO1 bonded to LO2 if Kij(LO1,LO2)>sl1
+                            (LO1 is occupied, LO2 is virtual)
+   sl2                      threshold to consider 2 pairs of LOs as bonded
+                            (LO1,LO2) bonded to i(LO3,LO4) 
+                            if any (Kij(LO1/LO2,LO3/LO4)>sl2) 
+                            (introduce dispersive terms)
+   sli                      as sl1 and sl2, for integrals
+                            (LO1 LO2 || LO3 LO4)
+                            (one threshold only: sli1=sli2)
+   zone               ' '   To define different zones of the molecule with
+                            different sl,sl2 and sli thresholds
+                            default: one zone (the whole molecule), 
+                            same sl,sl2 and sli on the whole molecule.
+
+                            1. The zones are defined using file .LOinfo 
+                            created at the localisation step
+                            - Edit the file .LOinfo
+                            structure of .LOinfo:
+                            column 1: rank of LO in dolo or lewis
+                            column 2: rank of LO in ijkloc (and casdiloc)
+                            column 3: LO label
+                            column 4: OCC/VIRT
+                            column 5: type of LO: SIG/PI/LP/DIFF_S/DIFF/PX...
+                            column 6: number of atoms in LO
+                            column 7...: atoms of LO
+                            example of 3 zones:
+                            zone 0 contains active orbitals
+                            add LOs to zone 0: example
+                            zone(1)='+orb:PI;+N:10;+typ:DIFF_PX'
+                            adds to zone 0:
+                            . LOs for which the string "PI" is present 
+                            in label (column 3)
+                            . LO of rank 10 in column 2
+                            . LO for which the string "DIFF_PX" is present
+                            in column 5
+                            no other possibility for the moment
+                            idem to fill zone 1. Give zone(2)=
+                            Rem: LOs already defined in zone 0 remain in
+                            zone 0!
+                            Once given all zones until zone_n, 
+                            the remaining LOs are in zone_(n+1)
+
+                            2. The zones are defined by the atoms A1,A2,A3. 
+                            example of 3 zones:
+                            Zone 0: all atoms, unless redefined after
+                            zone 1: a part of the molecule,
+                            defined by atoms A1,A2,A3.
+                            zone 1 = all orbitals on A1, A2 or A3
+                            zone 2: another part of the molecule,
+                            defined by atoms A4,A5
+                            Data: zone='A1,A2,A3','A4,A5',sl=0.001,0.003,0.01
+                            sli=0.0001,0.0003,0.001,sl2=0.0001,0.0003,0.001
+                            zone 0: sl=0.001,sli=0.0001,sl2=0.0001
+                            zone 1: sl=0.003,sli=0.0003,sl2=0.0003
+                            zone 2: sl=0.01,sli=0.001,sl2=0.001
+
+                            data of type "1." cannot be mixed with data "2."
+                            The program finds whether types 1. or 2. is used
+                            no further indicqtion is needed.
+
+                            Warning:    zones with lowests rank 
+                                        correspond to the most important
+                                        parts of the molecule
+
+itest(29)=0 : (defaut) zone de la liaison i-j = min((zone(i),zone(j))
+itest(29)=1 zone de la liaison i-j = max((zone(i),zone(j))
+itest(29)=2 zone de la liaison i-j = moyenne((zone(i),zone(j)), 
+Notice: itest(29)=0 corresponds to the LARGEST space, 1 to the smallest
+2 is inbetween
+et les seuils consideres sont la moyenne entre les seuils des zones de i et j
+   ysuiv,isuiv,suiv:
+   ysuiv               F    T: The converged eigenvectors correspond to the
+                            trial ones, in the same order
+   suiv                0.8  in ysuiv, "correspond" means the overlap between
+                            trial and converged vectors is larger or equal
+                            to suiv
+   isuiv            nvec+3  the maximum number of vectors to be computed in
+                            the seach of vectors corresponding to the guess.
+  
+   ycaspair            F    T: when two bonds (occ,virt) are linked to the
+                            CAS, they authomatically form a bond pair
+   sl               0.01    when liens='KIJ': threshold of the exchange
+                            integrals to consider two orbitals as linked.
+   s                0.03    threshold for printing of the determinants and
+                            coefficients of the eigenvector(s)
+   stop             'fin'   eventually stops the program before end
+                            'fin': full calculation
+                            'NDET': stops after calculation of the nb of det
+                            'TOPO'; stops after calaculation of TOPO matrix
+                            'SL': analyses thresholds and zones, then stops
+                            'ESSAI': computes trial vectors and stops
+   info         'Infoloc'   suffix of the name of infoloc file
+   info1              ' '   name of the infoloc file. If info1=' ', the name
+                            is prefix//info
+   other file names: same rules
+                            mono='Monoloc', topo, ijclloc2, ijclloc3, ijclloc4,
+                            davec, 
+
+**************** Size Consistent Dressing
+   mhab                 0   0: no dressing
+                            1: CEPA_0 dressing (Correlation Energy) 
+                            2: improved CEPA_0 dressing (Correlation Energy, 
+                               without redondants)
+                            3: Class Dressing 
+   nhab                 1   Reference eigenvector for dressing
+   iterh                2   davidson iteration after which dressing begins
+note:     if mhab/=0  nessai is put to 3
+
+ytestgendet             F   T : et mprint(7)=1 : ecrit les determinants
+
+                   
+***************if nessai=1:
+ for each vector:
+ &locess
+   it=                      holes
+   ip=                      particles
+   c=                       active occupation
+   v=                0.     coefficient
+ end of vector: 
+ &locess c='FIN' /  or
+ &locess c='END'  /
+
+ example (nvec=2)
+
+ &locess c='20',v=1.,  /
+ &locess c='fin' /
+ &locess c='+-',v=1.  /
+ &locess c='-+',v=-1.  /
+ &locess c='fin' /
+
+***************if nessai=2:
+ reads trial vector on file ess1
+ default: ess1="prefix"ess
+ the name ess1 may be modified in namelist &cdifil
+
+
+***************if liens='ATOM':
+
+ 1. Condition: each bond name (O_....) must contain the name of the atoms
+    involved in the bond. No other information must contain 
+    the name of an atom  (be careful with "sigma" if there is a "Si" atom...)
+ 2. all couple of bonds containing the same atom are authomatically linked
+ 3. links with the CAS: data:
+
+ &loc_at
+CAS
+list of atoms
+end
+
+    all bonds containing an atom of the list are linked to the CAS 
+   

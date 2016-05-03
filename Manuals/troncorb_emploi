@@ -1,0 +1,24 @@
+TRONCORB
+
+Met des zeros dans un fichiers d'orbitales
+
+Fichiers en entree :
+Mono (de molcost)
+orbin
+
+Fichiers en sortie :
+orbout
+
+Donnees :
+ &troncorb orbin='****',orbout='****'  /
+une suite de lignes de 3 entiers, une par element a annuler
+is il io
+is il io
+...
+FIN
+
+avec : is : symetrie de l'orbitale
+       il : ligne de l'element a annuler
+       io : colonne de l'element a annuler
+
+

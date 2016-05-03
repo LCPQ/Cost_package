@@ -1,0 +1,178 @@
+
+
+
+
+    XXXX     XX      XXXXX   XXXXX    XXXXXXX  XXXXXXX
+   X    X     X     X     X   X   X    X    X  X  X  X
+  X           X     X         X    X   X          X
+  X          X X    X         X    X   X  X       X
+  X          X X     XXXXX    X    X   XXXX       X
+  X         X   X         X   X    X   X  X       X
+  X         XXXXX         X   X    X   X          X
+   X    X   X   X   X     X   X   X    X    X     X
+    XXXX   XXX XXX   XXXXX   XXXXX    XXXXXXX    XXX
+
+
+
+
+
+Le programme casdet permet de :
+
+ - generer un espace de determinants. Cet espace est forme d'un 
+   espace modele (ou generateur) qui est un CAS ou un espace 
+   selectionne et d'un espace plus vaste genere a partir de 
+   l'espace modele (simples, simples et doubles, DDCI ...)
+   (Programme Casdet)
+
+
+INPUT FILES:
+
+"prefix"Info: created by molcost (ASCII file)
+"prefix"Mono: created by molcost (binary file)
+
+OUTPUT FILES:
+"prefix"det: contains determinants (binary file)
+"prefix"cdi: gives info to casdi (ASCII file)
+
+
+
+INPUT DATA:
+2 namelists:
+
+ &cdfil
+ prefix=                       name of the project, with a point (.) at the end
+                               ex: Project=PROJ in molcas
+                               --> prefix='PROJ.' in casdet
+                               this data MUST be given
+ Facultative data: input and output files have by default the names:
+ "prefix"Info, "prefix"Mono, "prefix"det
+ info='III'                    Info file's name is "prefix"III
+ Mono='MMM'                    Mono file's name is "prefix"MMM
+ det='DDD'                     det file's name is "prefix"DDD
+ info1='III'                   Info file's name is III
+ info1='MMM'                   Mono file's name is MMM
+ info1='DDD'                   Det file's name is DDD
+ /
+
+ &cd   
+ gener=            'CAS+SD'    'CAS+SD'     (CAS + Simples et Doubles)  (defaut)
+                               'CAS+S'      (CAS + Simples)
+                               'CAS+DDCI'   (CAS + espace DDCI)
+                               'CAS+DDC2'   (CAS + espace DDCI2)
+                               'CAS'        (CAS seul)
+                               'SEL+SD'     (esp selectionne+Simples et Doubles)
+                               'SEL+S'      (esp selectionne + Simples)
+                               'SEL+DDCI'   (esp selectionne + espace DDCI)
+                               'SEL+DDC2'   (esp selectionne + espace DDCI2)
+                               'SEL'        (esp selectionne seul)
+                               'SEL','SEL+S','SEL+DDC2','SEL+DDCI','SEL+SD'
+ noac                     0    number of active orbitals
+ nelac                    0    number of active electrons
+ numac                 16*0    active orbitals in the list of orb in molcost
+ ms2                           double de la valeur de Sz
+ is0                           groupe de symetrie des fonctions d'onde cherchees
+ nprint                   0    0 ou 1
+ /
+ 
+ si gener = SEL...
+ 
+une namelist &mr par determinant de reference fourni en donnee
+ &mr 
+      ic=      occupation du CAS. Si par exemple on veut occuper les
+               orbitales 3 et 4 par 2 et un electrons : ic=3,3,4. 
+               ic=3,-3,-4 est aussi accepte, les signes '-' sont mis a +.
+               ce qui permet eventuellement d'utiliser les fichiers 
+               ESSOUT ou ESCASOUT generes par le programme casdi, fichiers
+               pour lesquels les spins sont specifies.
+               Tous les equivalents de spin sont generes automatiquement
+
+               exemple
+               &cd gener='SEL+S,...  /
+               &mr ic=2,2,  /
+               &mr ic=3,3,  /
+               ...
+
+      it=      trous dans les references (max=2 memes commentaires que pour ic)
+
+      ip=      virtuelles occupees (max=2 memes commentaires que pour ic)
+
+      file=    nom de fichier contenant les namelists &mr
+               si "file" est donne (donc different du defaut file=' '), le
+               programme cesse de chercher les determinants dans le 
+               fichier de donner, et les cherche dans le fichier "file"
+
+      presel=  fabrication d'un espace de determinants.
+               methode : 2 passages casdet
+               passage 1 : presel='S' ou 'SD' (defaut ' ')
+               ' ' : pas de preselection
+               'S' : on genere tous les simples a partir d'un espace
+                     de determinants donnes individuellement
+               'SD' : idem, generation SD
+               On donne ensuite les determinants generateurs
+               &mrsel ic=.... /
+               &mrsel ic=.... /
+               ...
+               Attention, on ne peut donner que ic, les generateurs sont
+               donc definis a partir du CAS
+               passage 2 :
+               gener='SEL+S' out 'SEL+SD'
+               &mr file='PRESEL' /
+
+               exemple : 
+               passage 1 :
+               &cdfil prefix='n2.'  /
+               &cd gener='CAS+S',noac=7,numac=2,3,4,5,10,13,15,nelac=8,
+               presel='SD',nprint=0  /
+               &mrsel ic=2,2,3,3,4,4,5,5,  /
+               &mrsel ic=2,2,3,3,4,4,5,10,  /
+               passage 2 :
+               &cdfil prefix='n2.'  /
+               &cd gener='SEL+S',noac=7,numac=2,3,4,5,10,13,15,nelac=8,
+               nprint=1  /
+               &mr file='PRESEL' /
+
+
+
+ Remarques :
+      - On peut donner plusieurs fois le meme determinant. Les redondants
+        sont elimines
+      - Le programme casdet cree un fichier CASOUT qui contient tous
+        les determinants du CAS sous la forme des namelists &mr
+      - Le programme casdi cree un fichier ESSOUT de la forme :
+         &ess it=...,ic=...,ip=...,v=...  /
+        on peut utiliser ce fichier en remplacant ess par mr. Les signes
+        "-" sont ignores, ainsi que les coefficients v
+      - TOUTES les orbitales qui, dans une donnee mr sont :
+        . non doublement occupees en dessous du niveau de fermi
+        . non vides au-dessus
+        sont considerees comme ACTIVES (attention donc a la limite de
+        16 actives)
+
+      yf_act= 
+                .true. (defaut) les orbitales actives declarees dans 
+                &cd restent les actives de casdi. Dans ce cas, on NE PEUT PAS
+                utiliser les donnees it et ip
+                
+                .false. la liste des orbitales actives est modifiee. Sont
+                retirees celles toujours doublement occupees en-dessous
+                du niveau de Fermi, et celles toujours vides au-dessus. 
+                Sont rajoutees toutes celles qui apparaissent dans it et ip.
+
+ &end               
+
+
+ REMARQUE IMPORTANTE : quand gener = 'CAS+...', tous les determinants 
+        possibles sont generes. La seule limitation est le nombre de trous
+        et particules. Par exemple, si gener = 'CAS+SD', tous les 
+        determinants possibles ayant 2 trous et 2 particules au plus
+        sont presents, MEME S'ILS NE SONT PAS ENGENDRABLES A L'ORDRE 2
+        a partir du CAS.
+
+        Quand gener='SEL+...', c'est different. Seuls les determinants
+        dont un equivalent de spin peut etre genere a l'ordre 2 a partir
+        du CAS sont presents. 
+
+        Ainsi, si, avec gener='SEL+SD', on donne le CAS complet en donnee,
+        on obtiendra MOINS de determinants que avec la donnee gener = 'CAS+SD'
+
+

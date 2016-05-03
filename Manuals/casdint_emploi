@@ -1,0 +1,43 @@
+#####################################################################
+      CASDINT    CASDINT    CASDINT   CASDINT    CASDINT    CASDINT
+#####################################################################
+
+c--------------------------------------------------------------------
+c     CALCUL DES INTEGRALES DIRECTE + ECHANGE
+c--------------------------------------------------------------------
+
+Programme se placant avan casdi, qui calcule les integrales "Direct - Echange"
+a partir des integrales "Directes"
+
+
+En donnees :
+
+&casdint prefix='n2.',  /
+
+donnees facultatives :
+mono1,info1,ijcl1,
+ijcl21,ijcl31,ijcl41
+ijcl,ijcl2,ijcl3
+ijcl4                           : Donnees pour renommer les fichiers
+mem                             : memoire disponible (en Mb)
+maxlong                         : longueur max d'un fichier
+
+mem et maxlong dependent de la machine, et le defaut est mis a la compilation
+
+
+En entree :
+
+integrales moleculaires (ijcl)
+Info
+Mono
+
+
+En sortie :
+
+Integrales moleculaires a 2 indices  : ijcl2
+Integrales moleculaires a 3 indices  : ijcl3
+Integrales moleculaires a 4 indices  : ijcl4
+
+
+Programme casdi qui suit : ajouter la donnee "&dav itest(63)=T"
+

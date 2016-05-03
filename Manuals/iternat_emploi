@@ -1,0 +1,112 @@
+ 
+     #     #####  ######  #####   #    #    ##     #####
+     #       #    #       #    #  ##   #   #  #      #
+     #       #    #####   #    #  # #  #  #    #     #
+     #       #    #       #####   #  # #  ######     #
+     #       #    #       #   #   #   ##  #    #     #
+     #       #    ######  #    #  #    #  #    #     #
+ 
+ 
+ Programme d'optimisation d'orbitales moleculaires par moyenne
+ d'orbitales naturelles.
+ 
+ Le programme est un script ecrit en kshell
+ 
+ 
+                  UTILISATION
+ 
+ 
+ 1) Appel du programme
+    On fait tourner une chaine molcas ordinaire, jusqu'a obtenir des 
+    orbitales moleculaires. par exemple :
+ 
+    molcas run seward
+    molcas run scf  
+    molcas run rasscf 
+    molcas run rasread 
+ 
+    puis on doit rajouter les 2 lignes :
+ 
+    cp $Project.RasOrb INPORB
+    iternat < iter_in
+ 
+    ou : - le script iternat doit etre dans le path
+         - le fichier de donnees iter_in contient :
+ 
+ NITER
+ 10                             (nombre max d'iterations sur les OM)
+ MOTRA
+ motra.in                       (fichier de donnees de motra)
+ MOLCSD
+ molcsd.in                      (fichier de donnees de molcsd)
+ NATU
+ natu.in                        (fichier de donnees de naturalt)
+ MOLCSDX
+ /work0/daniel/babel/exe/molcsd        (programme molcsd a executer)
+ CASDETX
+ det16s                                (programme casdet a executer)
+ CASDIX
+ di16s                                 (programme casdi a executer)
+ NATUX 
+ naturalt                              (programme naturalt a executer)
+ FIN
+ 
+ 
+ 
+ 2) Conditions de fonctionnement
+    on doit   - avoir necessairement la ligne :
+                export Project WorkDir CurrDir
+              - appeler Project, WorkDir et CurrDir par ces noms-la,
+                avec ces orthographes
+              - avoir n fichiers de donnees pour l'ensemble casdet/casdi,
+                si on optimise les orbitales sur n calculs differents.
+              - ces fichiers doivent OBLIGATOIREMENT s'appeler
+                cdin1, cdin2 ... cdinn
+              - chaque fichier cdini ressemble a :
+ 
+                &cdfil prefix='co.'  /
+                &cd noac=2,nelac=2,numac=3,6,is0=1,ms2=0,gener='DDCI'  /
+                &cdifil prefix='co.'  /
+                &dav nessai=0,iternat=0 /
+ 
+                en particulier les donnees nessai=(0,1, ou 2) et 
+                iternat=0 sont OBLIGATOIRES.
+ 
+              - avoir des donnees pour motra et molcsd
+              - avoir un fichier de donnees pour naturalt. Ce fichier doit
+                s'appeler $Project.natu. par exemple :
+ 
+                &natfil prefix='co.', /
+                &mixdat
+                nsym=2,metat=1,1,coef=0.5,0.5,ymolcas=t,
+                ywrm=t, ywrn=t,ngel=2,0,0,0,ndel=2,0,0,0, /
+                seuil=1.d-6
+                (voir plus bas les donnees de naturalt)
+              - les fichiers ijnam et ijcl pour casdet/casdi doivent 
+                s'appeler Project.ijnam et Project.ijcl (dans l'exemple ici :
+                co.ijcl et co.ijnam).
+ 
+ 
+ 3) Interventions sur le script iternat :
+    PATH=$PATH: ... : mettre dans le path casdet, casdi et naturalt
+    alias molcas=$MOLCAS/ksh/molcas.ksh (a changer eventuellement)
+    
+ 
+ 4) Donnees de Naturalt
+    &mixdat
+    nsym= nombre de calculs casdet/casdi en parallele (M caluls, M fichiers
+          cdin)
+    netat=m,n,p,...  nombre de val/vect propres par calcul 
+                (nsym valeurs donnees, pour N=m+n+p+... val/vect propres)
+    metat=        numeros des racines dans chaque calcul 
+                  (m+n+p+... valeurs)
+    coef= m+n+p+... valeurs : coefficients relatifs de chaque val/vect propre
+    ymolcas=t,
+    ngel= donnees "FROZEN" de motracsd 
+    ndel= donnees "DELETE" de motracsd 
+    yw... donnees pour l'impression
+    seuil=  (seuil de convergence. (= recouvrement max des orbitales)
+    defaut=1.d-4)
+ 
+ 
+ 

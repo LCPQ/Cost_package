@@ -1,0 +1,34 @@
+!     
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!     Lit locorb
+!     Le modifie et le reecrit LOCORB_new
+!
+! Donnees
+! &modif_LOCORB
+! prefix='pref.'
+! string='T_'               on va traiter les orbitales dont le nom
+!                           contient "T_"
+! old='T_',new='G_          Dans ces orbitales, on transforme 'T_' en "G_"
+!
+! On donne une serie de namelists &modif_LOCORB. Les modifs se font 
+! sequentiellement.
+! Dans la 1ere namelist, on ajoute les donnees :
+! locorb='FeL2.LocGCasOrb' nom du fichier locorb en entree (def: LOCORB)
+! la derniere namelist est : string=' ', qui indique la fin des donnees
+! 
+!
+! en entree : LOCORB, DOLO_MOTRAIN, SCH_FERMI
+! en sortie : LOCORB_new, DOLO_MOTRAIN_new, DOLO_MOLCOSTIN_new
+!
+! Exemple de donnees :
+! modif_LOCORB << EOF
+! &modif_LOCORB string='T_',old='T_',new='G_',
+! locorb='FeL2.LocGCasOrb',prefix='FeL2.'  /
+! &modif_LOCORB string='O_',old='O_',new='G_' /
+! &modif_LOCORB string='PI',old='G_',new='O_' /
+! &modif_LOCORB string='G_N2.S.LP01',old='G_',new='O_' /
+! &modif_LOCORB string='G_N9.S.LP01',old='G_',new='O_' /
+! &modif_LOCORB string='G_N18.S.LP01',old='G_',new='O_' /
+! &modif_LOCORB string='G_N30.S.LP01',old='G_',new='O_' /
+! &modif_LOCORB string=' ', /
+!EOF

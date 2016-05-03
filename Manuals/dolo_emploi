@@ -1,0 +1,493 @@
+!
+!
+!                 Program dolo
+!
+!
+
+Files to be read  :    - molcost files
+                       - an orbital file (RasOrb, ScfOrb...)
+
+output files      :    - NONORLOC
+                         (Local Orbitals: they are not orthogonal, and are
+                         written in the basis of the OAO (Orthogonalized
+                         Atomic Orbitals))
+
+
+I.
+##############
+Preliminairies
+##############
+
+design the molecule, with atom names
+
+II.
+####
+Data
+####
+
+1. A DOLOIN file   (see "DOLOIN" part)
+
+2. The data to generate local Orbitals (LO) can be given
+   - interactively
+   - or can be prepared in the file 'OLD_DATA'
+     OLD_DATA can be obtained from an interactive run
+
+
+##############
+How it works   
+##############
+
+---------------------------------------------------
+ a. Interactive run  (program idolo)
+---------------------------------------------------
+
+ enter:
+ export CurrDir=...
+ export WorkDir=...
+ export Project=...
+ export PATH=$PATH:...cost/bin
+ 
+prepare a DOLOIN file
+ eventually copy an old OLD_DATA_nn file (of a previous run) to OLD_DATA
+
+
+ - enter: idolo
+   The program starts, and asks for a data to generate one or several LO's
+   (see below list of commands)
+
+ - In the same time, the program generates a new file OLD_DATA_1,
+   or OLD_DATA_2, or OLD_DATA_n+1, if OLD_DATA_n is the last existing one
+   In this file, it writes the data you just entered
+
+   If the program crashes, or if you stop it, data already entered are
+   in OLD_DATA_x. Copy OLD_DATA_x to OLD_DATA, verify if everything is OK,
+   and re-enter "dolo"
+
+----------------------------------------------------
+ b. background run  (program dolo)
+----------------------------------------------------
+
+ the script looks like:
+
+ export CurrDir=...
+ export WorkDir=...
+ export Project=...
+ export PATH=$PATH:...cost/bin
+ molcost < INPUT
+ dolo
+ (proj_scf < INPUT ; cp NONORLOC_scf NONORLOC)
+ schmudort < INPUT
+ 
+prepare a DOLOIN file
+dolo needs a correct OLD_DATA file
+
+#############
+Possible Data
+#############
+
+ Many possibilities exist to enter a data line which will generate
+ one or several LO's.
+
+ -----------------------------------------
+ a. Basic generation of one or several LO
+ -----------------------------------------
+    The "basic data" correspond to those read by the program
+    it is easier to use "macro data" (see below)
+    The program transforms the "macro data" into "basic data"
+
+    example:
+    O_C2H1 C2 1S(2) 2P(1) : H1 1S(1) (1,1)
+    (not case sensitive)
+
+    explanation:
+
+    O_C2H1 is the label of the LO('s). 
+    - The first letter (here: O), can be
+    A: active.  C: core.  G: frozen.  O: other
+    - _ character number 2: compulsory
+    - characters 3 to 12. Name of the LO, chosen by the user
+
+    C2 1S(2) 2P(1) ,  H1 1S(1)
+    atoms and AO's that describe the LO. Here, the LO is described by
+    atoms C2 and H1. The AO's for C2 are 1S(2) (i.e. the second S in the
+    ANO basis set, corresponding to the valence shell), and for H1 it is
+    1S(1)
+
+    the atoms are separated by ":"
+    There is in theory no limitation in the number of atoms/AO.
+
+    (1,1): first number: 1 bonding LO
+           second number: 1 anti-bonding LO
+    for a double bond, we would have (2,2)
+    for a core orbital, there would be only one atom, and (1,0)
+    Warning! For a SINGLE bond, appearing TWICE for symmetry reasons
+    we would have (2,2)!
+
+
+ -----------------
+ Macro data
+ -----------------
+    The "macro data" are easier to use. In the code, they generate
+    basic data
+    There are two main "macro data". Ther names are "bond_" and "deloc_"
+    Almost everything can be done with these two data
+
+    There are other kinds of data (core_, sigma_ etc...)
+    They may produce errors, if there is symmetry. Be careful, and verify
+    that you really obtained what you wanted.
+
+
+ -----------------------------------------
+ b. An macro data: BOND_
+ -----------------------------------------
+    a subset of the Lewis structure is given by:
+
+    chain='AT1-AT2-AT3...'
+    where:
+             ATi are labels of atoms
+             "-" can be -, =, ~ for single, double and triple bonds
+    An information may be added to ATi: 
+             ATi(LPn) or ATi(SYn) (lone pairs, bonds invariant under
+             a symmetry transformation) (see below the examples)
+
+    ::::::::::::::::::::::::
+    Give basis set for atoms
+    ::::::::::::::::::::::::
+    
+    bond_ basref='...'
+
+    These is a preliminary data, which defines the default basis set for all
+    following bond_ data. The default may be changed by another "bas" data.
+    It can be ignored for a particular bond_ data, by giving "bas=" (as in
+    many examples below)
+
+    example: BOND_ BASREF='O:1S(2) 2P(1),C:1S(2) 2P(1),H:1S(1)'
+
+    ::::::::::::::::::::::::
+    Change suffix to ".PI"
+    ::::::::::::::::::::::::
+    
+    if the suffix of the LO label is ".SG" and it corresponds to a pi LO
+    it is possible to change the label
+
+    Add label='P' to the BOND_ data
+    bond_ chain='...',label='P'
+    the name of the generated LO will be:
+    O_"...".PI
+    
+
+    
+     
+
+    ::::::::::::::::::::::::
+    example 1: (single bond)
+    ::::::::::::::::::::::::
+
+    the example of (a) can be written:
+    bond_ chain='C2-H1',bas='1S(2) 2P(1)','H1 1S(1)'
+    The label of the LO is chosen by the program (O_C2H1.SG)
+    n=2: there are 2 atoms (default value: 2)
+
+    ::::::::::::::::::::::::::::::::::::
+    example 2:  (double and triple bond)
+    ::::::::::::::::::::::::::::::::::::
+
+    a) bond_ n=2,chain='C2=C1',bas=2*'1S(2) 2P(1)'
+       generated labels: O_C2H1.SG O_C2H1.PI
+    b) bond_ n=2,chain='C2~C1',bas=2*'1S(2) 2P(1)'
+       generated labels: O_C2H1.SG O_C2H1.P1 O_C2H1.P2
+
+    ::::::::::::::::::::::::::::::::::
+    example 3:  (bonds and lone pairs)
+    ::::::::::::::::::::::::::::::::::
+                                     
+       HO                                         H7
+         \                          _            /
+       H2-C1 - C3H3 = C4H4 - C5H5 = N - C6H6 = C7
+         /                                       \
+       H1                                         H8
+    chain C1-C3=C4-C5=N-C6=C7:
+    bond_ n=7,chain='C1-C3=C4-C5-N(lp1)=C6-C7',bas=7*'1S(2) 2P(1)',
+    N(lp1) : atom N has 1 Lone Pair (no limit to n in lpn)
+
+    :::::::::::::::::::::::::
+    example 4: (3 lone pairs)
+    :::::::::::::::::::::::::
+
+    bond_ chain='S1(lp3)-C13',bas=2*'1s(1) 2p(1)'
+
+                     /
+    We have:        | S1-C13
+                     \
+    The programm generate the following basic data::
+o_s1c13 s1 1s(1) 2p(1) : c13 1s(1) 2p(1) (4 1)
+o_s1lp s1 1s(1) 2p(1) (3 0)
+The lone pairs were generated twice (once by each basic data).
+In o_s1c13, they are "spread" over the 4 occupied
+To correct that, the program generates:
+
+subs o_s1c13 o_s1lp 
+
+which substracts the lone pairs from the set (LP+sig+sig*). The sigma
+appears then to be pure, the LP are unchanged
+these generated data appear in OLD_DATA_x
+
+     ::::::::::::::::::::::::::::::::::::::::
+     example 5: (bonds invariant by symmetry)
+     ::::::::::::::::::::::::::::::::::::::::
+
+                     C1
+                   /    \
+                 C2      C3
+        ------   |  ----  |  ----------------  symmetry plane
+                 C2      C3
+                   \    /
+                     C1
+
+    bond_ n=2,chain='C1-C3(sy1)'
+
+    sy1 means that There is a C3-C3 bond, invariant by symmetry. The program
+    will generate the following basic data:
+    o_C1C3 C1 1s(2) 2p(1) : C3 1s(2) 2p(1) (3 3) (3 occ, 3 anti bonding 
+                                                 corresponding to C1-C3-C3-C1)
+    O_C3 C3 1s(2) 2p(1) (1 1)   (C3-C3 bond)
+    subs o_C1C3 c_C3  (substract c_C3 from o_C1C3)
+
+After substraction, The orbitals with the label o_C1C3 are really on 
+the C1-C3 bond, and not on C3-C3
+
+
+
+     :::::::::::::::::::::
+     example 6: (pi bonds)
+     :::::::::::::::::::::
+
+                     C1                          C1
+                   /                           /     
+                 C2      C3                  C2      C3
+        a)                |      b) ------      ----  |  --------- 
+                 C4      C6                  C2      C3
+                   \                           \     
+                     C5                          C1
+
+ a)   bond_ n=2,chain='C1=C2',orth='c1,c2,c3'
+ b)   bond_ n=1,chain='C3(sy2)',orth='c1,c3,c3' (bond invariant by symmetry)
+
+    only double bonds are represented (Kékulé). 
+    The 3 centers c1,c2,c3 define a plane.
+    The pi orbitals are orthogonal to this plane.
+    (orth='c1,c2,c3' means: no component in plane c1,c2,c3)
+
+
+     :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+     example 7: (All p, or d orbitals of an atom. Here: closed shell Fe)
+     :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+     3d of an iron atom:
+    a) 3 filled LO's
+    bond_ n=1,chain='fe(lp3)',bas='3d(1)'
+    b) 2 empty LO's
+    bond_ n=1,chain='fe',bas='3d(1)',vi=2
+
+     :::::::::::::::::::::::::::::::::::::::::::::::::
+     example 8 (several subgraphs in one "bond_" data)
+     :::::::::::::::::::::::::::::::::::::::::::::::::
+
+    This possibility is sometimes mandatory, if the data (SYn) is used
+   
+    example of butadiene:
+
+                                  \ /
+                          H1       C2 -
+                           \      //
+                            C1 - C1
+                           //     \
+                        - C2       H1
+                         / \
+
+    1. C2-C1-C1-C2 bond:  bond_ chain='C1(sy1)=c2'
+    2. C1-H1 bond:        bond_ chain='C1(sy1)-H1'
+
+    an atom with (SY.) CANNOT appear in two different bond_ lines
+    use instead:
+    bond_ chain='C1(sy1)=c2;C1(sy1)-H1'
+
+    NOTE: in general, all bonds can be generated with the BOND_ command
+
+ -----------------------------------------
+ c. An macro data: DELOC_
+ -----------------------------------------
+
+    build a set of orbitals that are deloclized on several atoms
+
+    example:
+    deloc_ n=3,chain='c1-c6-c11',bas=3*'2pz(1)',noc=3,nvirt=3,label='a'
+    means:
+    n : number of atoms (can be more by symmetry)
+    c1-c6-c11 : list of the atoms, separated by "-"
+    noc, nvirt : number of occupied and anti-bondings (in this example,
+    we have a 6-atom ring)
+    label='a' : these orbitals will be active in the MRCI
+    bas=3*'2pz(1)' : in this example, the Pz pi orbitals were seeked
+    
+ -----------------------------------------
+ d. SIGMA_
+ -----------------------------------------
+    A set of sigma bonds 
+    sigma_ c*  1S(2) 2P(1) : h*  1S(1)  dmax=1.2 ANGSTROM
+    generates all CH bonds for all (C,H) couples, separated by less
+    than 1.2 Angstrom.
+    Note. in C*..., * replaces only NUMBERS, and not letters. So Cu is
+    not considered as a Carbon atom. Do not call the C atoms Ca, Cb...
+
+    NOTE: This data makes sometimes problems if there is symmetry. In this
+    case, better use BOND_
+
+
+ -----------------------------------------
+ e. CORE_ , DIFF_
+ -----------------------------------------
+    A set of core or diffuse orbitals
+    CORE_ C* 1S(1)          ---> occupation is (1 0)
+    DIFF_ C* 1S(1)          ---> occupation is (0 1)
+
+#############################################
+Other macro data (do not une for the moment)
+#############################################
+
+ -----------------------------------------
+ f. PI_
+ -----------------------------------------
+    similar to SIGMA_, for pi orbitals
+    example:
+    PI_ C* 2P(1) : C* 2P(1) DMAX=1.4 ANGSTROM
+
+    NOTE: This data makes somtiomes problems if there is symmetry. In this
+    case, use BOND_c1,c2,c3
+
+
+ -----------------------------------------
+ g. SUBS
+ -----------------------------------------
+    subtraction (or projection) of a set of LO from another set of LO,
+    as it appears in B. example 4
+ 
+    subs o_s1c13 o_s1lp  (the space of o_s1c13 is larger than the space
+    of o_s1lp)
+
+
+ -----------------------------------------
+ h. RENAME
+ -----------------------------------------
+    If one enters for example
+    o_s1lp s1 1s(1) 2p(1) (3 0)       (basic data)
+                     /
+                    | S1
+                     \
+    3 lone pairs are generated, with the same name. The names need to 
+    be different in the following of the calculation
+
+    a solution is to use BOND_ instead
+    bond _ n=1,chain='S1(lp3)',bas='1s(2) 2p(1)'
+
+    or to rename the bonds
+REN o_s1lp o_s1lp1 o_s1lp2 o_s1lp3
+    (REN common_name individual_names)
+
+
+
+ -----------------------------------------
+ i. Multiple data
+ -----------------------------------------
+ - using "[", "]"
+   ex. 
+   BOND_ CHAIN='W1',BAS='3D[0 1+ 2+ 2-](1) 3D[0 1+ 2+ 2-](2)',LP=1,VI=1
+   generates 4 bond data:
+   BOND_ CHAIN='W1',BAS='3D0(1) 3D0(2)',LP=1,VI=1
+   BOND_ CHAIN='W1',BAS='3D1+(1) 3D1+(2)',LP=1,VI=1
+   ...
+ - using "[["
+   ex: 
+   BOND_ CHAIN='O[1 2 3 4 5 6 7 11 13 15](LP1)',BAS='2P[[X Y Z]](1) 2P[[X Y Z]](2)'
+   generates all combinations of the 10 data due to [1 2 3 4 5 6 7 11 13 15]
+   and the 3 due to [[X Y Z]]
+   (a total of 30 bond_data)
+
+
+
+
+ -----------------------------------------
+ j. ROT_
+ -----------------------------------------
+ - replaces a set of AOs (in general Px,Py,Pz orbitals of an atome) by a
+   combination of these orbitals
+ -example
+ROT_ ATOM='C1',PARA='0,C1'
+  for Atom C1, the three AOs Px,Py,Pz are replaced by a combination, 
+  the axis is given by the direction 0 (zero)-C1, where 0 is the Origin.
+  the AO basis is reduced, to eliminate unwihed LOs
+ - you can give several ROT_ commands
+ -example
+ROT_ ATOM='C1',PARA='0,C1'
+ROT_ ATOM='C2',PARA='0,C2'
+ROT_ ATOM='C3',PARA='0,C3'
+ROT_ ATOM='C4',PARA='0,C4'
+ROT_ ATOM='C5',PARA='0,C5'
+DELOC_ CHAIN='C3-C1-C5-C2-C4',BAS=5*'2P(1)',NOC=8,NVIRT=8
+ROT_ CLOSE
+
+ The DELOC command uses the reduced AOs. The Rot_ commands are valid for all 
+ following commands  
+ ROT_ CLOSE cancels all preceding ROT_ data
+
+
+
+
+
+
+####################
+Details of Data
+####################
+
+--------------
+DOLOIN file:
+-------------- 
+
+All data are compulsory
+
+ &smufil prefix='Project.'  /
+ &smu 
+ nprint=0,
+ orb='test.RasOrb'                       orbital file name, as a result
+                                         or a SCF or CASSCF calculation
+ loc_actives               default:T     T: localizes active orbitals
+                                         F: active orbitals remain unlocal
+ /
+
+ &oao /
+Concerns data to build OAO (Orthogonalized Atomic Orbitals)
+list of Atomic Orbitals, with priority in the orthogonalization
+example:
+Fe 1s(1) pr=1
+--> first s orbital of atom Fe in the list of AO's
+    the AO is orthogonalized with highest priority (pr=1)
+Fe 2p(1) pr=1
+--> idem for all 2px, 2py and 2pz AO's
+Fe 3d(1) pr=2
+--> idem for the 5 d orbitals. (pr=2: will be orthogonalized, for example,
+    to the 1s of C which has (pr=1) (projection orthogonalization)
+-- etc...
+C* 1s(1) pr=2
+N* 1s(1) pr=2
+H* 1s(1) pr=2
+S 1s(1) pr=2
+C* 2p(1) pr=2
+N* 2p(1) pr=2
+H* 2p(1) pr=2
+S* 2p(1) pr=2
+fin                                      end of AO data
+ &orb symm='XY' /                        symm: as given in seward after the line
+                                         SYMMetry   
+
+
+

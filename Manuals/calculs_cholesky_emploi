@@ -1,0 +1,253 @@
+  CALCULS CHOLESKY    CALCULS CHOLESKY    CALCULS CHOLESKY    CALCULS CHOLESKY  
+16 dec 2010
+
+
+I Calculs CASDI
+
+I.1. Les integrales bi-electroniques sont obtenues dans motra.
+     =========================================================
+     La seule difference dans les fichiers de donnees est d'ajouter CHOL ou 
+     HIGH ou LOW dans les donnees de seward.
+
+     - Le calcul motra est tres long, et cette methode n'est pas la meilleure.
+
+
+I.2. Motra transforme les vecteurs de Cholesky, qui sont transformes en 
+     integrales par un programme ulterieur (chol_X). 
+     =========================================================
+     chol_X ne les calcule
+     pas toutes. Il commence par calculer les integrales d'echange, puis, 
+     des seuils etant donnes, ne calcule que les integrales entre orbitales
+     en "interaction forte"
+
+     seward                  donnee supplementaire "CHOL" ou "HIGH" ou "LOW"
+     scf
+     (rasscf)
+
+     motra                   donnees supplementaires (2 lignes):  CTONLY
+                                (dans cet ordre !)                KPQ
+                             (Cholesky Transformation ONLY ; kpq : dans les
+                              vecteurs cholesky V(k,pq) k sont les lignes
+                              et pq les colonnes
+                              PAS DE GEL EN DONNEE !
+
+     molcost                 donnees supplementaires : ychol=T
+                             frozen, delete, fermi (apres gel) sont 
+                             donnes ICI
+                             si on veut reordonner les orbitales en
+                             Occ Act Virt (pour Nevpt2) donner ICI
+                             act, ninact
+
+     chol_X                  donnees : &chol sli1=1.d-7,sli2=1.d-7 /
+                             dans l'integrale (ij|kl):
+                             sli1 : seuil pour considerer la distance i-j
+                             sli2 : seuil pour considerer la distance ij-kl
+
+     casdet
+     casdi                   donnee obligatoire : itest(63)=1
+                             (les integrales sont lues sur ijcl1,ijcl2,ijcl3)
+
+
+II. Calculs en Orbitales Localisees
+
+II.1.  Calculs CASDI
+
+     seward                  donnee supplementaire "CHOL" ou "HIGH" ou "LOW"
+     scf
+     (rasscf)
+
+     dolo                    donner &smu ychol=T dans DOLOIN
+     (proj_scf)
+     schmudort
+     cp LOCORB INPORB
+
+     motra DOLO_MOTRAIN
+                             DOLO_MOTRAIN a ete cree dans dolo
+                             par rapport a motra, il a les 2 lignes 
+                             supplementaires :
+                                                       CTONLY
+                                                       KPQ
+                             (Cholesky Transformation ONLY ; kpq : dans les
+                              vecteurs cholesky V(k,pq) k sont les lignes
+                              et pq les colonnes
+                              pas de gel ni de del en donnee 
+
+     molcost < DOLO_MOLCOSTIN
+                             DOLO_MOLCOSTIN a ete cree dans dolo
+                             avec la donnee supplementaire : ychol=T
+                             frozen, delete, fermi (apres gel) sont 
+                             donnes ici
+
+     chol_X                  donnees : &chol sli1=1.d-7,sli2=1.d-7 /
+                             dans l'integrale (ij|kl):
+                             sli1 : seuil pour considerer la distance i-j
+                             sli2 : seuil pour considerer la distance ij-kl
+     casdet
+     casdi                   donnee obligatoire : itest(63)=1
+                             (les integrales sont lues sur ijcl1,ijcl2,ijcl3)
+
+
+II.2.  Calculs CASDILOC
+
+    Motra transforme les vecteurs de Cholesky. Puis molcost les reecrit
+    dans un fichier lu par ijkloc. ijkloc transforme les vecteurs de Cholesky
+    de la base atomique a la base moleculaire, puis calcule les integrales en
+    bas locale, conformement a ds seuils en donnee.
+
+     seward                  donnee supplementaire "CHOL" ou "HIGH" ou "LOW"
+     scf
+     (rasscf)
+
+     si localisation dolo :
+        dolo                    donner &smu ychol=T dans DOLOIN
+        (proj_scf)
+        schmudort
+        cp LOCORB INPORB
+     si localisation lewis :
+        lewis
+        cp LOCORB INPORB
+                                donner ychol=T dans &lewis
+
+
+
+     motra DOLO_MOTRAIN  (DOLO_MOTRAIN a ete genere dans dolo ou lewis)
+                             DOLO_MOTRAIN a ete cree dans dolo (ou lewis)
+                             par rapport a motra, il a les 2 lignes 
+                             supplementaires (a cause de la donnee ychol=T 
+                             dans dolo ou lewis) :
+                                                       CTONLY
+                                                       KPQ
+                             (Cholesky Transformation ONLY ; kpq : dans les
+                              vecteurs cholesky V(k,pq) k sont les lignes
+                              et pq les colonnes
+                              pas de gel ni de del en donnee 
+
+     molcost < DOLO_MOLCOSTIN  (DOLO_MOLCOSTIN a ete genere dans dolo ou lewis)
+                             DOLO_MOLCOSTIN a ete cree dans dolo (ou lewis)
+                             avec la donnee supplementaire : ychol=T
+                             frozen, delete, fermi (apres gel) sont 
+                             donnes ici
+
+
+     ijkloc                 donnee supplementaire : ychol=T
+                            sli1 : seuil, dans (ijkl) pour les
+                            distributions i-j et k-l
+                            sli2 : seuil d'interaction de ij avec kl
+
+     casdiloc
+
+
+exemple de fichier casdiloc
+
+#!/bin/bash
+Project='acetone'
+CurrDir=$PWD
+WorkDir=$CurrDir/TMP
+export Project WorkDir CurrDir
+export PATH=$PATH:/home/daniel/cost2/bin
+export MOLCAS=/home/daniel/7.7.dev
+echo 'Start of job:' $Project
+echo 'Current directory:' $CurrDir
+echo 'Scratch directory:' $WorkDir
+cd     $WorkDir
+#------------------------------------------------------------------------------#
+# Start executing molcas job                                                   #
+#------------------------------------------------------------------------------#
+
+
+######################seward scf############
+rm -fr $WorkDir
+mkdir  $WorkDir
+cd     $WorkDir
+molcas  $CurrDir/sewin
+molcas  $CurrDir/scfin
+cp ../TMP0/acetone.ScfOrb .
+############################################
+
+##############interface#####################
+molcost << EOF
+ &cost prefix='acetone.', ymo=f /
+EOF
+###########################################
+
+######## LOCALISATION ###################################
+dolo
+proj_scf << EOF
+ &pscf prefix='acetone.'  /
+EOF
+mv NONORLOC_scf NONORLOC
+schmudort << EOF
+ &ort  /
+EOF
+###########################################
+
+############# motra  ########################
+cp LOCORB INPORB
+molcas DOLO_MOTRAIN
+###########################################
+
+############# molcost  ########################
+molcost < DOLO_MOLCOSTIN
+###########################################
+
+############# ijkloc  ########################
+ijkloc << EOF
+ &ijkloc prefix='acetone.',ychol=t,nprint=1
+ symm='XY X',sli=0.d0 /
+EOF
+###########################################
+
+#############  casdiloc  ##################
+casdiloc << EOF
+ &locci prefix='acetone.',gener='CAS+SD'
+ /
+EOF
+###########################################
+                                                                                                                                          1,1          Haut
+DOLOIN:
+
+ &smufil prefix='acetone.'  /
+ &smu
+ nprint=0,ychol=t
+ orb='acetone.ScfOrb' /
+ /
+ &oao /
+C* 1s(1) pr=1
+O* 1s(1) pr=1
+C* 1s(2) pr=2
+O* 1s(2) pr=2
+H* 1s(1) pr=2
+C* 2p(1) pr=2
+O* 2p(1) pr=2
+fin
+ &orb symm='XY X' /
+ &smufil prefix='acetone.'  /
+ &smu
+ nprint=0,ychol=t
+ orb='acetone.ScfOrb' /
+ /
+ &oao /
+C* 1s(1) pr=1
+O* 1s(1) pr=1
+C* 1s(2) pr=2
+O* 1s(2) pr=2
+H* 1s(1) pr=2
+C* 2p(1) pr=2
+O* 2p(1) pr=2
+fin
+ &orb symm='XY X' /
+
+
+OLD_DATA:
+
+BOND_ BASREF='O:1S(2) 2P(1),C:1S(2) 2P(1),H:1S(1)'
+BOND_ CHAIN='C1=O1(LP2)'
+BOND_ CHAIN='C1-C2'
+BOND_ CHAIN='C2-H1'
+BOND_ CHAIN='C2-H2'
+CORE_ C* 1S(1) label='G'
+CORE_ O* 1S(1) label='G'
+
+
+
+

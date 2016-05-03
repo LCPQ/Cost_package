@@ -1,0 +1,544 @@
+****************************************************************************
+lewis   lewis   lewis   lewis   lewis   lewis   lewis   lewis   lewis   lewis   
+****************************************************************************
+
+Fabrication d'orbitales locales d'essai sans calcul SCF prealable
+
+Files to be read  :    - molcost files: Info and Mono
+                       - if necessary (see data), 
+                         an orbital file (RasOrb, ScfOrb...)
+                       - A molden file corresponding to this study 
+                         (facultative, if you want to get a molden file of 
+                         localised orbitals). This model file can be
+                         scf.molden, ras.molden, guess.molden, etc...
+
+output files      :    - LOCORB
+                         (Local symmetrical Orbitals written in 
+                          symmetrised AO's (to be transferred to further steps))
+                       - $Project.lewis.molden : corresponding molden file
+
+Other orbital files, corresponding to molden output files:
+                       - LEWORB_LOC
+                         (Local symmetrical Orbitals written in 
+                          desymmetrised AO's)
+                       - LEWORB_LOCLOC
+                         (Local non symmetrical Orbitals written in 
+                          desymmetrised AO's)
+                       - $Project.lewis.LOC.molden : corresponding molden file
+
+Generalities: 
+              In general, a lot of run will be necessary to build the data
+              The program is not time consuming, and needs small input files
+              It is convenient to copy these files to a local directory.
+
+I.
+##############
+Preliminairies
+##############
+
+design the molecule, with atom names.
+
+
+
+
+
+II.
+##############
+Data 1
+##############
+
+
+
+
+
+--------------------
+1. namelist &lewis
+-------------------
+
+ &lewis 
+ prefix='locbenzfe-CAS_7-5.',
+ scforbin=' ',                        ' ' --> no ScfOrb nor RasOrb file
+                                      'name_of_Orb_File'
+
+---------------------------
+If scforbin/=' ':
+ ref_inac=            nsym*0          nsym integers (nsym is the number of 
+                                      symmetries of the problem)
+                                      = nb of inactive occupied orbitals in
+                                      input ScfOrb or RasOrb data
+ ref_act=             nsym*0          nsym integers. = nb of active orbitals in
+                                      input RasOrb data
+---------------------------
+Facultative data:
+
+ symm='y x',         read from        as given is seward
+		     info file
+ nprint                    0          print level
+ ychol                     F          T: cholesky calculation
+
+
+ Fermi0               nsym*0          fermi level. If not given, is computed
+                                      by reading input file ScfOrb or RasOrb
+
+ /
+
+
+
+
+
+III.
+##############
+Data 2
+##############
+
+Suite of data after the "/" of namelis lewis. 
+The suite of data ends by a line with a slash:
+"/                        "
+
+Each line begins with a keyword
+The different keywords are:
+BOND, C, B, DS1, DP1, D2, D3, T, GROUP, STOP
+
+STOP:    Read data and treat them until "stop" is encountered
+
+
+
+
+--------------------
+III.1. Get information about connectivity
+   This data has no influence on the calculation. It only give informations
+   concerning connectivity that help to write the data.
+--------------------
+
+keyword: BOND
+
+example
+BOND C C 1.6
+BOND C H 1.2
+
+writes all pairs (Cn,Cm) where n,m ar numbers for which the bond length
+Cn-Cm < 1.6			gives C-C bonds
+idem for Cn-Hm < 1.2		gives C-H bonds
+
+
+
+
+
+
+------------------------------------------------------
+III.2. Give details of Connectivity data: Generating Orbitals
+------------------------------------------------------
+
+One data per line
+
+c   C1
+b   C1-C2
+DP1 AT1 AT2 AT3
+...
+
+
+
+
+
+=================================
+III.2. A. 1-center orbital:
+Occupied Orbital, Virtual Orbital
+=================================
+
+-----------------
+CORE: keyword "C"
+-----------------
+
+c   C1                     1s core of C1 atom
+C   FE                     1s core of FE atom
+c   FE;shell=1s(2)         2s core of FE atom
+c   FE;shell=2px(1)        2px core of FE atom
+c   FE;shell=2p(1)         2px,2py,2pz cores of FE atom
+
+-----------------
+other than core: Same syntax as for "CORE"
+-----------------
+
+O   FE;shell=1s(3)         defines 3s of Fe as doubly occupied orbital
+                           but not labeled as "core"
+V   FE;shell=3D1+(1)       defines 3d1+ of Fe as empty orbital
+
+T   C1;shell=1s(3),label='G'   generates the 3s diffuse of atom C1 and freeze it
+                           
+
+
+-----------------
+multiple data:
+-----------------
+
+c   c*                     1s core of all Cijk atoms, where ijk are numbers
+                           (not letters!)
+C   C[1 2 3]               1s core of all C1, C2, C3
+
+
+
+
+==========
+III.2.  BONDS
+==========
+
+-----------------
+keyword: "B"
+-----------------
+
+b   C1-C2        single C1-C2 bond
+b   C2-C2        single C2-C2 bond (two C2 atoms, due to symmetry)
+b   C1=C2        double C1-C2 bond 	Axis  of pi bond 
+				   	is given by a 3rd atom close to C1 or C2
+                 			This 3rd atom is found by the program
+b   C1~C2        triple C1-C2 bond
+b   C1^C2        only pi bond. Axis of pi bond is found as for C1=C2
+b   C1^C2;pi=0.,0.,1.      only pi bond, axis of pi is 0.,0.,1.
+
+WARNING! To define a triple bond as 3 bonds (-,^,^), it is necessary 
+to change the suffix of BOTH pi orb: ex:
+b   C1^C2;pi=1.,0.,0.,pi=PIX
+b   C1^C2;pi=0.,0.,1.,pi=PIZ
+    (see in manual comments about additional data)
+
+-----------------
+multiple data:
+-----------------
+
+A"*"             generates all Aijk. ijk are numbers (not letters!)
+
+
+b   c1-c*  ; dist=1.6      generates all c1-cijk orbitals for which
+                           dist(C1,C*)<=1.6 angstrom
+b   c*^n*  ; dist=1.6      generates all cijk^Nlmn orbitals
+b   c*-h* ; dist=1.2
+b   c*-c* ; dist=1.6
+b   c[1 2 3]-c[4 5 6]      generates C1-C4, C2-C5, C3-C6 
+
+
+
+
+
+===============
+III,2. C. Lone Pairs
+===============
+
+keywords: DS1 DP1 VP1 D2 D3
+
+
+
+DS1 AT1 AT2 [AT3 [AT4]]     one sigma lone pair on AT1. The direction is the
+                            AT1-AT2 vector, or the sum of {AT1-ATi} vectors
+
+
+DP1 AT1 AT2 AT3 [AT4]
+
+                            one pi lone pair on AT1.            AT3
+                                                               /   
+                       AT2     AT3                          AT2
+                          \   /               or             |  
+                           AT1(:)                           AT1(:)             
+                                                        
+
+                        1. AT4 is not given:    
+                           the lone pair is orthogonal to the plane AT1 AT2 AT3
+                           (pi lone pair)
+                        2. + INPLANE,  "DP1 AT1 AT2 AT3; INPLANE"
+                           the lone pair is in the plane AT1 AT2 AT3 
+                           (n lone pair)
+                        3. AT4 is given:
+                           the lone pair is orthogonal to the plane AT2 AT3 AT4
+                           (example: NH3)
+DP1 AT1 ; NVOIS=2	The neighbour atoms are not given, but found by the program
+			(they are the nearest atoms). nvois=2 or 3
+
+VP1 AT1 AT2 AT3 [AT4]   as DP1, with no electrons
+
+                            
+
+D2 AT1 AT2 [AT3]            Two lone pairs (one sigma, one pi)
+                        
+                            1. D2 AT1 AT2:  AT2 - AT1 (:) sigma lone pair
+                                            search atom AT5, closest to AT2
+                                          AT5
+                                             \
+                                              AT2 - AT1
+                                          the pi lone pair is in 
+                                          the plane, on AT1 
+                                          (n lone pair)
+
+                            2. D2 AT1 AT2 AT3
+                                                       AT2     AT3
+                                                          \   /    
+                                                           AT1     
+                                           sigma lone pair (:)
+
+                                          the pi lone pair is orthogonal 
+                                          to the plane, on AT1 
+
+                            
+D3 AT1 AT2                   Three lone pairs (one sigma, two pi)
+
+                                   (:)
+                             AT2 - AT1(:)
+                                   (:)
+
+----------------
+multiple data:
+----------------
+
+DS1 C* N* ; dist=1.4 : search all C-N with dist<1.4, make sigma 
+                       Lone Pair on C
+
+
+
+
+
+
+================
+III,2. D. GROUP
+================
+
+keyword: "GROUP"
+
+               - Only if scforbin is given!
+               - give a set of orbitals
+               - the program computes the local corresponding
+                 density matrix, diagonalises
+               - extracts local eigenvectors
+syntax:
+
+GROUP
+- 4 integers: noc,nvir,nact,nelac 
+            (nb of occupied, nb of virtuals, nb of active orb, nb of active 
+            electrons (total number, IN ALL symmetries)
+- if nact>0: nact integers: position of active orb in local eigenvectors
+  this data is not straightforword. A first lewis run can be necessary
+  to find the correct numbers
+- nAO character strings: (nAO is the nb of AO's that define the group)
+     name of atom (symmetrised list)
+     on the same line: n  character strings: 
+     shells corresponding to added orb
+- END GROUP
+
+Note: noc+nvir+nact = nb of given orbitals
+
+example of GROUP data:         (define pi orbitals of a C=C, as active)
+group
+1 1 2 2                (noc=1,nvir=1,(1 sigma, 1sigma*),nact=2,nelac=2)
+1 8                    (The 2 lines below define 8 AOs, it generates 
+                       8 LOs, the active should be the first and 
+                       the last LOs)
+C1 1S(2) 2PX 2PY 2PZ
+C2 1S(2) 2PX 2PY 2PZ
+end group
+
+Important remark: noc,nvir,nact and nelac are the TOTAL number of orbitals
+and electron over ALL symmetries!
+
+example: 2 FE atoms, 5 el/atom, corresponding by symmetry
+
+group
+0 0 10 10
+1 2 3 4 5 6 7 8 9 10
+FE 3d0(1)  3d1+(1)  3d1-(1)  3d2+(1)  3d2-(1)
+end group
+
+5 orb given: 3d0(1)  3d1+(1)  3d1-(1)  3d2+(1)  3d2-(1)
+but 10 active and 10 electrons!
+
+
+
+
+
+
+=========================
+III,2.E. ADDITIONAL DATA
+=========================
+
+These data are added at the end of the lines:
+"line" ; "additional data"
+example: b   C1~C2 ; label='A'
+
+different data:
+label='A'			the created orbitals are active
+label='G'			the created orbitals will be frozen
+pi='PIX' (resp. 'PIY' 'PIZ')	the created pi orbital 
+				has an X (resp. Y Z) axis
+shell='1s(2)'			only for 1-center LOs
+				the shell is 2s instead of 1s default
+nvois= / inline			for "DP1" data: see DP1
+OCCONLY / VIRONLY               for sigma or pi bonds: generates only 
+				(bonding / anti-bonding) orbitals
+suffix='SUFF'			pi orbitals: replaces .PI suffix by .SUFF
+
+several additional data are separated by ","
+o FE;shell=3d(2),label='A'
+
+
+
+
+----------------------------------------------
+III.3.  (UN)ACTIVATION of LOs , (UN)FREEZE LOs
+after the "/" that ends the suite of data
+----------------------------------------------
+Beta version!
+
+- transforms active LOs into non active, and non active into active.
+- transforms frozen LOs into non frozen, and non frozen into frozen.
+1. UN... replaces beginning of label: 'A_' or 'G' 
+   --> 'x_'  where "x" is given in data (O, T, or C)
+2. reorder LOs to put actives and frozen into the right place
+
+data
+
+ACTI label='LAB',sym=SYM
+where:
+LAB is a substring of the label to be modified 
+(it is not necessary to give the entire label)
+SYM is the symmetry of the orbital
+
+ACTI label='LAB',sym=SYM,equal
+where:
+if 'equal' is added at the end of the data, LAB is tested to be IDENTICAL to
+the label to be modified.
+the rest of data is the same
+
+UNAC label='LAB',sym=SYM,[newlabel='NEWLABEL']
+where:
+difference with respect to ACTI:
+NEWLABEL if A_--> x_  'O', 'T', or 'C' (default 'O')
+
+UNAC label='LAB',sym=SYM,[newlabel='NEWLABEL'],equal
+if 'equal' is added at the end of the data, LAB is tested to be IDENTICAL to
+the label to be modified.
+
+FREEZE: like ACTI
+
+UNFREEZE: like UNACT
+
+Supplementary data:
+ all  (ex: FREEZE label='LAB',sym=SYM,all)
+ freeze all orbitals containing strin "LAB"
+ (stops with error if "all" is not given and more tah one orbital is found)
+
+
+
+
+
+
+
+--------------------------
+III.4.  RENAME
+after the "/" that ends the suite of data
+--------------------------
+Beta version!
+
+Change nature of OL by editing a file.
+
+Data:
+
+RENAME
+keywork
+END RENAME
+
+A. keyword=LIST or MOD
+
+a) if keywork=LIST: (first run)
+The program generates a file RENAME_LIST with the rank and the 
+list of the Local Orbitals and stops
+
+b) edit file RENAME_LIST:
+   for example change the name of an orbital from O_... to A_... to 
+   activate it. The unchanged orbitals can be removed from the list, since
+   the LO's are givent with their position in the orbital basis.
+   Save the file in RENAME_MOD
+
+c) if keyword=MOD
+   The program reads the file RENAME_MOD and ends the calculation, it takes 
+   account of the modifications in the nature of orbitals.
+
+
+example of data:
+lewis << EOF
+ &lewis prefix='acetone.',symm='XY X',nprint=1,scforbin='acetone.RasOrb',
+ mprint=0,0,0,0,ref_inac=8,5,1,1,ref_act=0,0,0,2  /
+D2 O1 C1
+b c*-h* ; dist=1.2
+b c*-c* ; dist=1.6
+b c1=O1
+C C* ; label='g'
+C O* ; label='g'
+/
+RENAME
+mod
+end rename
+EOF
+
+B. keyword='STRING'=
+
+data: STRING string string1 string2
+
+string: part of the label of the LO present if the label is to be modified
+string1,string2: modification: string1 --> string2
+
+example of data:
+lewis << EOF
+ &lewis prefix='chaine.', /
+c C*
+b C1=C2
+b C1-H1
+b C1-H2
+b C2-H3
+b C2-H4
+/
+rename
+string PI O_ A_
+end rename
+EOF
+(activate pi orbitals)
+
+
+
+
+--------------------------
+III.5.  COPY
+--------------------------
+Copy of reference orbitals to the final localised orbitals.
+N.B. They are not re-localised
+
+cp ; atom='AT1 [AT2]' ; shell='sh',label='ll',sym=is,num=nu,type='ty'
+
+where:
+- sh= 1s, sh=2PX, sh=3D1+ ... for example
+- ll='O', label='A', label='V' for occupied, active or virtual
+- "is" is the symmetry of the MO
+- nu=position of MO in its symmetry
+- ty = type of the created LO as is appears in LOinfo, 5th column (CORE,
+  SIG,LP,ATOM,PI). No influence on the result. Is written in LOinfo
+
+
+Falcultative: label (generated from num)
+              shell (see remark below)
+
+
+Important remark concerning atom and shell
+
+These data permit to generate 1 or 2 AO name(s)  [AT1 sh], [AT2 sh]
+Once this AO was encountered, it is marked. At the end of the program,
+all non-marked AOs are used to generate diffuse LOs. After generating all
+LOs (and before generating diffuse orb), the number of marked AOs should
+be equal to the number of generated LOs.
+
+If one wants to generate a LO with dominating weight on FE 3D1+ for example,
+he does not want to create a diffuse FE 3D1+ at the end!
+in this case, atom='FE',shell='3D1+'
+
+The AO [AT1 sh] must not be used in another bond!
+It is in general the AO of dominating weight in the copied MO
+
+shell can be omitted, which simplifies a bit the problem.
+In this case, the marked AO corresponds authomatically to the largest 
+coefficient of the copied MO. It is not a secure method! Verify that the 
+correct AO has been found! If not, the program gives in general an error.
+
