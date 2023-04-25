@@ -2,7 +2,7 @@
 
 Web page : http://github.com/LCPQ/Cost_package
 
-The different programs need atomic integrals and molecular orbitals coming from Molcas or OpenMolcas.
+The different programs need atomic integrals and molecular orbitals coming from Molcas or OpenMolcas (in the last version cost_maj.tgz).
 
 
 In the whole package "cost", you can find : 
@@ -13,6 +13,19 @@ In the whole package "cost", you can find :
 - faiano: to transform a basis set in an ANO form (sometimes useful for the localization)
 - etc...
 
+How to install
+================
+1. You have untared the cost_maj.tgz file
+2. cd cost_maj
+3. edit file install
+   answer the questions (lines containing "???")
+   (i.e. choose the F90 compiler, look also at the lapack and blas variables)
+4. ./install
+5. Important Note: The localisation of the cost files in the file system
+   appears in some files.
+   As a consequence, once you have run "install":
+   - DO NOT change the name of cost directory
+   - DO NOT copy the cost directory (ex cp -R cost cost2) onto another place.
 
 
 People involved
