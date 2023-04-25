@@ -2,7 +2,7 @@
 
 Web page : http://github.com/LCPQ/Cost_package
 
-The different programs are using atomic integrals and molecular orbitals coming from Molcas or OpenMolcas.
+The different programs need atomic integrals and molecular orbitals coming from Molcas or OpenMolcas.
 
 
 In the whole package "cost", you can find : 
