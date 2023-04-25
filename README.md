@@ -2,15 +2,19 @@
 
 Web page : http://github.com/LCPQ/Cost_package
 
+The different programs are using atomic integrals and molecular orbitals coming from Molcas or OpenMolcas.
+
+
 In the whole package "cost", you can find : 
-- casdi: MRCI program (MR-SDCI or DDCI), 
+- casdi: MRCI program (MR-SDCI, MR+DDCI, MR+DDCI2, MR+S), 
 - dolo: localization of orbitals,
 - exsci also named casdiloc: selected MRCI (quasi linear MRCI),
 - noscf: to optimize orbitals (using MR-SCI and density matrices of the states, different spin multiplicity or spatial symmetry allowed),
 - faiano: to transform a basis set in an ANO form (sometimes useful for the localization)
 - etc...
 
-  
+
+
 People involved
 ===============
 
