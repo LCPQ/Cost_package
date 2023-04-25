@@ -178,7 +178,7 @@ et les seuils consideres sont la moyenne entre les seuils des zones de i et j
    stop             'fin'   eventually stops the program before end
                             'fin': full calculation
                             'NDET': stops after calculation of the nb of det
-                            'TOPO'; stops after calaculation of TOPO matrix
+                            'TOPO'; stops after calculation of TOPO matrix
                             'SL': analyses thresholds and zones, then stops
                             'ESSAI': computes trial vectors and stops
    info         'Infoloc'   suffix of the name of infoloc file

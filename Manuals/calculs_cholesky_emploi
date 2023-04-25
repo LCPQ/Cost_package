@@ -44,7 +44,7 @@ I.2. Motra transforme les vecteurs de Cholesky, qui sont transformes en
                              sli2 : seuil pour considerer la distance ij-kl
 
      casdet
-     casdi                   donnee obligatoire : itest(63)=1
+     casdi                   donnee obligatoire : itest(63)=1 dans &dav
                              (les integrales sont lues sur ijcl1,ijcl2,ijcl3)
 
 

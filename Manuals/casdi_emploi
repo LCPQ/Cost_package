@@ -85,6 +85,7 @@ niter=                     nombre d'iterations (defaut 50)
 nessai=              0     0: No trial vector
                            1: give trial vectors manually (see trial vect part)
                            2: reads vect from preceeding calculation
+                           3: CAS prediagonalization
 twvec=            0.03     seuil d'ecriture des coefficients des vecteurs
                            propres sur la sortie
 twess=                     seuil d'ecriture des coefficients des vecteurs
@@ -175,7 +176,7 @@ II additional information
      On peut rajouter la donnee :
      lvec= les numeros de vecteurs lus sur un fichier PREFIX.ess issu
      d'un calcul precedent. Le fichier PREFIX.ess est le fichier binaire
-     resultat d'un calcul casdi precedent. On fai simplement :
+     resultat d'un calcul casdi precedent. On fait simplement :
      cp PREFIX.davec PREFIX.ess
 
      par exemple

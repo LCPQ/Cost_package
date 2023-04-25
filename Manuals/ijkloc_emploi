@@ -58,6 +58,7 @@ Donnees facultatives :
                         dans les donnees de seward (a condition
                         que les donnees de seward et de ijkloc
                         soient dans le meme fichier)          'SEWARD'
+           itest(1)     1 (symmetry calculation)              ex:  &ijkloc prefix='$Project.',symm='Y X',itest(1)=1  /
            info1        file Info en entree                   ~Info
            mono1        file Mono en entree                   ~Mono
            ijcl1        file ijcl en entree                   ~ijcl

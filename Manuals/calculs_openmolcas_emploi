@@ -1,0 +1,11 @@
+  CALCULATIONS USING OPENMOLCAS
+
+
+1) To use openmolcas with the cost codes: 
+export MOLCAS_INPORB_VERSION=1.1 
+to obtain molecular orbitals in the format used in the cost codes
+
+2) use molcostopenmolcas instead of molcost
+
+3) use noscfopenmolcas instead of noscf (optimization of the orbitals at a CI level, keeping the locality of the orbitals if we start from localized orbitals)
+

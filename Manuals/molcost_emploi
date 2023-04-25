@@ -27,6 +27,7 @@ a namelist
  prefix='Project.'        (required data)
  molcas=  version of molcas: 4 or 5 or 54 (default 0: in that case, molcost
           analizes the OneInt file to get the molcas value)
+(yopm=    T: OPENMOLCAS version - not yet implemented - see calculs_openmolcas_emploi)
  ycl=     T: generates a formatted file of MO integrals (default F)
  yao=     T: reads and interfaces the AO integrals (default T)
  ymo=     T: reads and interfaces the OM integrals (default T)
